@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "author": "t-ashula",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.12.2",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
+    "@vitest/coverage-v8": "^1.4.0",
+    "eslint": "^8.57.0",
+    "eslint-plugin-sort-keys": "^2.3.5",
+    "eslint-plugin-vitest": "^0.4.1",
+    "prettier": "^3.2.5",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.3",
+    "vitest": "^1.4.0"
+  },
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
+    "format": "prettier -c --no-config --no-editorconfig '{app,bin}/**/*.{mjs,ts,mts}'",
+    "lint": "eslint --max-warnings=0 --report-unused-disable-directives '{app,bin}/**/*.{mjs,ts,mts}'",
+    "fix": "npm run format -- -w && npm run lint -- --fix"
+  },
+  "dependencies": {}
+}
