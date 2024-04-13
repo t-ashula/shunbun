@@ -26,7 +26,7 @@ describe("Failure", () => {
     const f = new Failure({});
     expect(f.isSuccess()).toBe(false);
   });
-  it("unwrap throw false", () => {
+  it("unwrap throw error", () => {
     const v = `error:${Math.random()}`;
     const f = new Failure(new Error(v));
     expect(() => f.unwrap()).toThrowError(v);
