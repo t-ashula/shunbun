@@ -22,5 +22,7 @@
     "lint": "eslint --max-warnings=0 --report-unused-disable-directives '{app,bin}/**/*.{mjs,ts,mts}'",
     "fix": "npm run format -- -w && npm run lint -- --fix"
   },
-  "dependencies": {}
+  "dependencies": {
+    "winston": "^3.13.0"
+  }
 }
