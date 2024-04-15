@@ -1,4 +1,4 @@
-import { run as crawler, CrawlerInput } from "../../crawler/index.mjs";
+import { run as crawl, CrawlerInput } from "../../crawler/index.mjs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { readFile } from "node:fs/promises";
@@ -48,7 +48,7 @@ const loadCrawlerInput = async (
     throw new Error("no url found");
   })(arg);
 
-  const output = (await crawler(input)).unwrap();
+  const output = (await crawl(input)).unwrap();
 
   console.log(output);
 })();
