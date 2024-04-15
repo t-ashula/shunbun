@@ -4,8 +4,12 @@ import { Failure, type Result } from "../core/result.mjs";
 import { getLogger } from "../core/logger.mjs";
 import { NotImplementedError } from "../core/errors.mjs";
 
-type CrawlerInput = {}; //
-type CrawlerOutput = {}; //
+type CrawlerInput = {
+  url: string;
+};
+type CrawlerOutput = {
+  url: string;
+};
 class CrawlerError extends Error {}
 
 const logger = getLogger();

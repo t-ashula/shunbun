@@ -22,7 +22,8 @@ class Failure<T, E> {
     this.error = error;
   }
 
-  unwrap(): void {
+  //
+  unwrap(): T {
     throw this.error;
   }
 
