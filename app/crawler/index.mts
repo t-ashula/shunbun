@@ -2,8 +2,11 @@
 
 import { Failure, Success, type Result } from "../core/result.mjs";
 import { getLogger } from "../core/logger.mjs";
-import { run as download } from "./downloader.mjs";
-import type { DownloaderInput, DownloaderOutput } from "./downloader.mjs";
+import {
+  run as download,
+  type DownloaderInput,
+  type DownloaderOutput,
+} from "../downloader/index.mjs";
 import { NotImplementedError } from "../core/errors.mjs";
 
 type CrawlerInput = {
