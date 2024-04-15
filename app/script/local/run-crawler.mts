@@ -39,9 +39,13 @@ const loadCrawlerInput = async (
     .parse();
 
   const input: CrawlerInput = await (async (arg) => {
-    return arg.input
-      ? (await loadCrawlerInput(arg.input)).unwrap()
-      : { url: arg.url };
+    if (arg.input) {
+      return (await loadCrawlerInput(arg.input)).unwrap();
+    }
+    if (arg.url) {
+      return { url: arg.url };
+    }
+    throw new Error("no url found");
   })(arg);
 
   const output = (await crawler(input)).unwrap();
