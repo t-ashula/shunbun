@@ -28,7 +28,7 @@ const mockServer = setupServer(
   }),
   http.get("https://mock.test/network-error", () => {
     return HttpResponse.error();
-  })
+  }),
 );
 beforeAll(() => {
   mockServer.listen();
@@ -120,7 +120,7 @@ describe("run", () => {
 
     expect(result.value.request.headers.get("Accept")).toBe("*/*");
     expect(result.value.request.headers.get("user-agent")).toBe(
-      "UserAgentByHeader"
+      "UserAgentByHeader",
     );
   });
   it("can set request header except explicit useragent", async () => {
@@ -152,9 +152,9 @@ describe("run", () => {
       expect(result.error.message).toBe("fetch failed.");
       expect(result.error.cause).toBeInstanceOf(DownloaderTimeoutError);
       expect((result.error.cause as Error).message).toBe(
-        `timeout exceeded. ${waitTimeout}`
+        `timeout exceeded. ${waitTimeout}`,
       );
     },
-    { timeout: 30 * 1000 }
+    { timeout: 30 * 1000 },
   );
 });

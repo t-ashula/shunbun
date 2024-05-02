@@ -1,11 +1,12 @@
-import { run as crawl, CrawlerInput } from "../../crawler/index.mjs";
+import type { CrawlerInput } from "../../crawler/index.mjs";
+import { run as crawl } from "../../crawler/index.mjs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { readFile } from "node:fs/promises";
 import { Failure, Success, type Result } from "../../core/result.mjs";
 
 const loadCrawlerInput = async (
-  path: string
+  path: string,
 ): Promise<Result<CrawlerInput, Error>> => {
   try {
     const d = await readFile(path, "utf-8");

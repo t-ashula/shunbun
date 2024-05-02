@@ -29,7 +29,7 @@ const DEFAULT_USER_AGENT = "Shunbun/1.0";
 const logger = getLogger();
 
 const run = async (
-  input: DownloaderInput
+  input: DownloaderInput,
 ): Promise<Result<DownloaderOutput, DownloaderError>> => {
   logger.debug(`Downloader.run called. input=${JSON.stringify(input)}`);
 
@@ -69,7 +69,9 @@ const generateInit = (input: DownloaderInput): [RequestInit, () => void] => {
         const ac = new AbortController();
         const aborter = setTimeout(() => {
           ac.abort(
-            new DownloaderTimeoutError(`timeout exceeded. ${input.waitTimeout}`)
+            new DownloaderTimeoutError(
+              `timeout exceeded. ${input.waitTimeout}`,
+            ),
           );
         }, input.waitTimeout);
         const defer = () => {
