@@ -20,8 +20,8 @@
   "scripts": {
     "test": "vitest",
     "coverage": "vitest run --coverage",
-    "format": "prettier -c --no-config --no-editorconfig '{app,bin}/**/*.{mjs,ts,mts}'",
-    "lint": "eslint --max-warnings=0 --report-unused-disable-directives '{app,bin}/**/*.{mjs,ts,mts}'",
+    "format": "prettier -c --no-config --no-editorconfig './**/*.{ts,mts}'",
+    "lint": "eslint --max-warnings=0 --report-unused-disable-directives './**/*.{ts,mts}'",
     "fix": "npm run format -- -w && npm run lint -- --fix"
   },
   "dependencies": {
