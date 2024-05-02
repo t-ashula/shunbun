@@ -1,3 +1,4 @@
 {
-  "cSpell.words": ["datetime"]
+  "cSpell.words": ["datetime"],
+  "eslint.workingDirectories": ["./app/"]
 }
