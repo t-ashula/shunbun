@@ -25,6 +25,7 @@
     "fix": "npm run format -- -w && npm run lint -- --fix"
   },
   "dependencies": {
+    "mime": "^4.0.3",
     "rss-parser": "^3.13.0",
     "ulid": "^2.3.0",
     "winston": "^3.13.0"

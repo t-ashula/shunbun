@@ -100,6 +100,10 @@ type CrawlerOutput = {
 };
 ```
 
+### extractor
+
+channel と crawlURL をダウンロードした結果受け取って episode の配列を返す
+
 ### recordTaskMaker
 
 episode を受け取って，recording Task にする

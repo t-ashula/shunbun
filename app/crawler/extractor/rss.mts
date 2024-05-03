@@ -1,24 +1,31 @@
 import Parser from "rss-parser";
 import { ulid } from "ulid";
-import { type Result, Success, Failure } from "../core/result.mjs";
-import type { Channel, Episode, EpisodeID } from "../core/types.mjs";
-import { tryParseDate } from "../core/datetime.mjs";
+import { type Result, Success, Failure } from "../../core/result.mjs";
+import type { Episode, EpisodeID } from "../../core/types.mjs";
+import { tryParseDate } from "../../core/datetime.mjs";
+import type {
+  ExtractorInput,
+  ExtractorOutput,
+  ExtractFunction,
+} from "./index.mjs";
+import { ExtractorError } from "./index.mjs";
 
-type ExtractorInput = {
-  channel: Channel;
-  content: string;
+const stringify = async (content: string | Response): Promise<string> => {
+  if (content instanceof Response) {
+    return await content.text();
+  } else {
+    return content;
+  }
 };
-type ExtractorOutput = {
-  episodes: Episode[];
-};
-class ExtractorError extends Error {}
 
-const run = async (
-  input: ExtractorInput
+const run: ExtractFunction = async (
+  input: ExtractorInput,
 ): Promise<Result<ExtractorOutput, ExtractorError>> => {
   const parser = new Parser();
+  const { channel, content } = input;
   try {
-    const feed = await parser.parseString(input.content);
+    const text = await stringify(content);
+    const feed = await parser.parseString(text);
 
     const episodes: Episode[] = feed.items.map((item) => ({
       id: ulid() as EpisodeID,
@@ -28,7 +35,7 @@ const run = async (
       description: item.itunes?.summary || item.content || "",
       streaming: "static",
       streamURL: item.enclosure?.url || "",
-      channelId: input.channel.id,
+      channelId: channel.id,
     }));
 
     const output: ExtractorOutput = {
