@@ -24,22 +24,17 @@ type ExtractFunction = (
 const run = async (
   input: ExtractorInput,
 ): Promise<Result<ExtractorOutput, ExtractorError>> => {
-  const extractor = await selectExtractor(input);
-  if (extractor === null) {
+  const checkers = [isRSS];
+  const extractors = [rssExtractor];
+  const supports = await Promise.all(
+    checkers.map(async (checker) => checker(input)),
+  );
+  const i = supports.findIndex((s) => s === true);
+  if (i === -1) {
     return new Failure(new ExtractorError("unsupported content"));
   }
-
+  const extractor = extractors[i];
   return extractor(input);
-};
-
-const selectExtractor = async (
-  input: ExtractorInput,
-): Promise<ExtractFunction | null> => {
-  let typeCheck = await isRSS(input);
-  if (typeCheck) {
-    return rssExtractor;
-  }
-  return null;
 };
 
 export type { ExtractorInput, ExtractorOutput, ExtractFunction };

@@ -11,12 +11,15 @@ import {
 } from "vitest";
 
 import { HttpResponse } from "msw";
+
 import type { Channel, ChannelID, Episode } from "../core/types.mjs";
-import { CrawlerError, run } from "./index.mjs";
-import { run as download, DownloaderError } from "../downloader/index.mjs";
 import { Failure, Success } from "../core/result.mjs";
+
+import { run as download, DownloaderError } from "../downloader/index.mjs";
 import { run as extractEpisodes, ExtractorError } from "./extractor/index.mjs";
 import type { ExtractorOutput } from "./extractor/index.mjs";
+
+import { CrawlerError, run } from "./index.mjs";
 
 vi.mock("../downloader/index.mjs", async (importOriginal) => {
   const actual = await importOriginal();
@@ -24,7 +27,7 @@ vi.mock("../downloader/index.mjs", async (importOriginal) => {
   return { ...actual, run: vi.fn() };
 });
 
-vi.mock("../extractor/index.mjs", async (importOriginal) => {
+vi.mock("./extractor/index.mjs", async (importOriginal) => {
   const actual = await importOriginal();
   // @ts-ignore; FIXME
   return { ...actual, run: vi.fn() };
@@ -68,6 +71,9 @@ describe("run", () => {
         response: HttpResponse.text("<?xml>"),
       };
       return new Success(output);
+    }); // @ts-ignore; FIXME
+    extractEpisodes.mockImplementation(async () => {
+      return new Failure(new ExtractorError("extractor something wrong."));
     });
 
     const input = { channel: TEST_CHANNEL };
@@ -89,11 +95,13 @@ describe("run", () => {
       return new Success(output);
     });
     const expectedEpisodes: Episode[] = [];
+
     // @ts-ignore; // FIXME
     extractEpisodes.mockImplementation(async () => {
       const output: ExtractorOutput = {
         episodes: expectedEpisodes,
       };
+
       return new Success(output);
     });
 
