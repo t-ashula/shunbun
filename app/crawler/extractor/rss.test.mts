@@ -100,6 +100,7 @@ describe("run", () => {
       {
         channelId: "test",
         description: "the last episode",
+        duration: 1335,
         id: "01HX1MV3X47MVF06P32KS8HGJB",
         publishedAt: new Date("2023-12-29T12:39:28.000Z"),
         streamURL: "https://channel.test/ep2.mp3",
@@ -110,6 +111,7 @@ describe("run", () => {
       {
         channelId: "test",
         description: "the first episode",
+        duration: 2535,
         id: "01HX1MV3X4ECYE32AMFK1B3S4Z",
         publishedAt: new Date("2023-12-22T12:39:28.000Z"),
         streamURL: "https://channel.test/ep1.mp3",

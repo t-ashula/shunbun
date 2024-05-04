@@ -3,7 +3,7 @@ import { ulid } from "ulid";
 import mime from "mime";
 import { type Result, Success, Failure } from "../../core/result.mjs";
 import type { Episode, EpisodeID } from "../../core/types.mjs";
-import { tryParseDate } from "../../core/datetime.mjs";
+import { tryParseDate, tryParseDuration } from "../../core/datetime.mjs";
 import type {
   ExtractorInput,
   ExtractorOutput,
@@ -28,6 +28,7 @@ const run: ExtractFunction = async (
       streaming: "static",
       streamURL: item.enclosure?.url || "",
       channelId: channel.id,
+      duration: tryParseDuration(item.itunes?.duration),
     }));
 
     const output: ExtractorOutput = {
