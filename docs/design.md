@@ -46,19 +46,21 @@ notes
 
 - id: ulid(string)
   - crawler で取り出したときに割り当てる
+- theirId
+  - guid とか rss 側のデータから生成した id
 - title: string
   - episode title
 - description: string
   - rss.channel.item description
-- published_at: datetime
+- publishedAt: datetime
   - pubDate
-- start_at?: datetime
+- startAt?: datetime
   - live broadcast start at
-- end_at?: datetime
+- endAt?: datetime
   - live broadcast end at
 - streaming: StreamingType(string)
   - クロールしてきて決めたレコーディング方法
-- channel_id: uuid(string)
+- channelId: uuid(string)
   - channel の id
 
 ### StreamingType

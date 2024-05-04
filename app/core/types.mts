@@ -16,12 +16,12 @@ type Episode = {
   theirId: string; // guid
   title: string;
   description: string;
-  published_at: string; // ISO String format
+  publishedAt: Date;
   streamURL: string;
   streaming: StreamingType;
   duration?: number; // in second
-  start_at?: string;
-  end_at?: string;
+  startAt?: Date;
+  endAt?: Date;
   channelId?: ChannelID;
 };
 

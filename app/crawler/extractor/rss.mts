@@ -31,7 +31,7 @@ const run: ExtractFunction = async (
       id: ulid() as EpisodeID,
       theirId: item.guid || "",
       title: item.title || "",
-      published_at: tryParseDate(item.pubDate)?.toISOString() || "",
+      publishedAt: tryParseDate(item.pubDate) || new Date(), // now ?
       description: item.itunes?.summary || item.content || "",
       streaming: "static",
       streamURL: item.enclosure?.url || "",
