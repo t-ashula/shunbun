@@ -11,7 +11,7 @@ import type {
 import { ExtractorError } from "./index.mjs";
 
 const run: ExtractFunction = async (
-  input: ExtractorInput,
+  input: ExtractorInput
 ): Promise<Result<ExtractorOutput, ExtractorError>> => {
   const parser = new Parser();
   const { channel, content } = input;
@@ -38,4 +38,12 @@ const run: ExtractFunction = async (
   }
 };
 
-export { run };
+const canHandle = async (input: ExtractorInput): Promise<boolean> => {
+  const { meta } = input;
+  if (meta && meta.contentType && meta.contentType.match(/application\/rss/)) {
+    return true;
+  }
+  return false;
+};
+
+export { run, canHandle };
