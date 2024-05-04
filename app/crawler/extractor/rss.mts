@@ -1,5 +1,6 @@
 import Parser from "rss-parser";
 import { ulid } from "ulid";
+import mime from "mime";
 import { type Result, Success, Failure } from "../../core/result.mjs";
 import type { Episode, EpisodeID } from "../../core/types.mjs";
 import { tryParseDate } from "../../core/datetime.mjs";
@@ -11,7 +12,7 @@ import type {
 import { ExtractorError } from "./index.mjs";
 
 const run: ExtractFunction = async (
-  input: ExtractorInput
+  input: ExtractorInput,
 ): Promise<Result<ExtractorOutput, ExtractorError>> => {
   const parser = new Parser();
   const { channel, content } = input;
@@ -40,8 +41,9 @@ const run: ExtractFunction = async (
 
 const canHandle = async (input: ExtractorInput): Promise<boolean> => {
   const { meta } = input;
-  if (meta && meta.contentType && meta.contentType.match(/application\/rss/)) {
-    return true;
+  if (meta && meta.contentType) {
+    const ext = mime.getExtension(meta.contentType);
+    return ext === "rss";
   }
   return false;
 };

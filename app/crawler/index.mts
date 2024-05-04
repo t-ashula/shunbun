@@ -19,7 +19,7 @@ class CrawlerError extends Error {}
 const logger = getLogger();
 
 const run = async (
-  input: CrawlerInput
+  input: CrawlerInput,
 ): Promise<Result<CrawlerOutput, CrawlerError>> => {
   logger.debug(`crawler.run called. input=${JSON.stringify(input)}`);
 
@@ -31,7 +31,7 @@ const run = async (
   const downloading = await download(di);
   if (downloading.isFailure()) {
     return new Failure(
-      new CrawlerError("download failed.", { cause: downloading.error })
+      new CrawlerError("download failed.", { cause: downloading.error }),
     );
   }
   const downloaded = downloading.value;
@@ -47,7 +47,7 @@ const run = async (
 
   if (extracting.isFailure()) {
     return new Failure(
-      new CrawlerError("extraction failed.", { cause: extracting.error })
+      new CrawlerError("extraction failed.", { cause: extracting.error }),
     );
   }
   const output = {

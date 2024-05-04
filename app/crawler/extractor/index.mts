@@ -18,11 +18,11 @@ type ExtractorOutput = {
 class ExtractorError extends Error {}
 
 type ExtractFunction = (
-  _input: ExtractorInput
+  _input: ExtractorInput,
 ) => Promise<Result<ExtractorOutput, ExtractorError>>;
 
 const run = async (
-  input: ExtractorInput
+  input: ExtractorInput,
 ): Promise<Result<ExtractorOutput, ExtractorError>> => {
   const extractor = await selectExtractor(input);
   if (extractor === null) {
@@ -33,7 +33,7 @@ const run = async (
 };
 
 const selectExtractor = async (
-  input: ExtractorInput
+  input: ExtractorInput,
 ): Promise<ExtractFunction | null> => {
   let typeCheck = await isRSS(input);
   if (typeCheck) {
