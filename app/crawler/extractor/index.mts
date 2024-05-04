@@ -21,19 +21,31 @@ type ExtractFunction = (
   _input: ExtractorInput,
 ) => Promise<Result<ExtractorOutput, ExtractorError>>;
 
+type CheckFunction = (_input: ExtractorInput) => Promise<boolean>;
+
+const SUPPORTED_EXTRACTORS: {
+  name: string;
+  checker: CheckFunction;
+  handler: ExtractFunction;
+}[] = [
+  {
+    name: "rss",
+    checker: isRSS,
+    handler: rssExtractor,
+  },
+];
+
 const run = async (
   input: ExtractorInput,
 ): Promise<Result<ExtractorOutput, ExtractorError>> => {
-  const checkers = [isRSS];
-  const extractors = [rssExtractor];
   const supports = await Promise.all(
-    checkers.map(async (checker) => checker(input)),
+    SUPPORTED_EXTRACTORS.map(async ({ checker }) => checker(input)),
   );
   const i = supports.findIndex((s) => s === true);
   if (i === -1) {
     return new Failure(new ExtractorError("unsupported content"));
   }
-  const extractor = extractors[i];
+  const extractor = SUPPORTED_EXTRACTORS[i]["handler"];
   return extractor(input);
 };
 
