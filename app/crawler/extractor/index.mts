@@ -3,7 +3,7 @@ import type { Channel, Episode } from "../../core/types.mjs";
 
 type ExtractorInput = {
   channel: Channel;
-  content: string | Response;
+  content: string;
 };
 type ExtractorOutput = {
   episodes: Episode[];

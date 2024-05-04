@@ -2,7 +2,7 @@
 import mime from "mime";
 import { Failure, Success, type Result } from "../core/result.mjs";
 import { getLogger } from "../core/logger.mjs";
-import { run as download } from "../downloader/index.mjs";
+import { run as download, stringify } from "../downloader/index.mjs";
 import type {
   DownloaderInput,
   DownloaderOutput,
@@ -63,7 +63,7 @@ const extractEpisodes = async (
     return new Failure(new ExtractorError("unsupported content"));
   }
 
-  const content = downloaded.response;
+  const content = await stringify(downloaded.response);
   const extracting = await extractor({ channel, content });
   if (extracting.isFailure()) {
     return new Failure(

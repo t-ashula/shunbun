@@ -10,22 +10,13 @@ import type {
 } from "./index.mjs";
 import { ExtractorError } from "./index.mjs";
 
-const stringify = async (content: string | Response): Promise<string> => {
-  if (content instanceof Response) {
-    return await content.text();
-  } else {
-    return content;
-  }
-};
-
 const run: ExtractFunction = async (
   input: ExtractorInput,
 ): Promise<Result<ExtractorOutput, ExtractorError>> => {
   const parser = new Parser();
   const { channel, content } = input;
   try {
-    const text = await stringify(content);
-    const feed = await parser.parseString(text);
+    const feed = await parser.parseString(content);
 
     const episodes: Episode[] = feed.items.map((item) => ({
       id: ulid() as EpisodeID,
