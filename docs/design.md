@@ -75,15 +75,16 @@ enum: static, stream, live
 
 ## Functions
 
-### loader/saver
+### IO (loader/saver)
 
 - loader
-
-  - 各機能への input に必要な情報を何処かから持ってきて input の配列で返す
-
+  - 各機能への input に必要な情報を何処かから持ってきて input で返す
 - saver
-  - 各機能からの output の配列を受け取って何処かに置く
-  - loader との対比から 配列を受け取っているが，すでに output の中が配列になってるなら複雑になりすぎでは？
+  - 各機能からの output を受け取って何処かに置く
+- それぞれに複数読み取り，複数書き込みを前提で作る
+  - load は 対象の配列か，発生したエラーを返す
+  - save は 個々のデータの書き込みの結果 (Result) の配列と，エラーが発生したかどうかと，あるいは書き込みのための前提条件の失敗を Failure で返す
+    - save は書き込み先が DB のように transaction を扱えるならば all or nothing にできるが， sqs とかだとそうはできないので
 
 ### crawler
 

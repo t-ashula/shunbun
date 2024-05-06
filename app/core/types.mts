@@ -22,7 +22,7 @@ type Episode = {
   duration?: number; // in second
   startAt?: Date;
   endAt?: Date;
-  channelId?: ChannelID;
+  channelId: ChannelID;
 };
 
 export type { Channel, ChannelID, Episode, EpisodeID };

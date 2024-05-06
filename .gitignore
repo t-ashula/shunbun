@@ -170,4 +170,5 @@ override.tf.json
 terraform.rc
 
 tmp/
+data/
 !.keep
