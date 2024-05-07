@@ -25,4 +25,19 @@ type Episode = {
   channelId: ChannelID;
 };
 
-export type { Channel, ChannelID, Episode, EpisodeID };
+type StorageType = "local";
+
+type StoredEpisode = Episode & {
+  storageType: StorageType;
+  storedKey: string;
+};
+
+export type {
+  Channel,
+  ChannelID,
+  Episode,
+  EpisodeID,
+  StreamingType,
+  StoredEpisode,
+  StorageType,
+};
