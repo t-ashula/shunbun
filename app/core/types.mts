@@ -19,6 +19,7 @@ type Episode = {
   publishedAt: Date;
   streamURL: string;
   streaming: StreamingType;
+  expectedContentType?: string;
   duration?: number; // in second
   startAt?: Date;
   endAt?: Date;
@@ -27,11 +28,16 @@ type Episode = {
 
 type StorageType = "local";
 
-type StoredEpisode = Episode & {
+type StoredEpisodeMeta = {
   storageType: StorageType;
   storedKey: string;
+  storedAt: Date;
 };
 
+type StoredEpisode = {
+  episode: Episode;
+  stored: StoredEpisodeMeta[];
+};
 export type {
   Channel,
   ChannelID,

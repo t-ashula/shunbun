@@ -29,6 +29,7 @@ const run: ExtractFunction = async (
       streamURL: item.enclosure?.url || "",
       channelId: channel.id,
       duration: tryParseDuration(item.itunes?.duration),
+      expectedContentType: item.enclosure?.type,
     }));
 
     const output: ExtractorOutput = {

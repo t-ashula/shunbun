@@ -117,13 +117,12 @@ recorder は自身の制御範囲内のストレージ (disk) に episode をダ
 recorder を動かす環境には十分なスペースのストレージがあることを前提とする
 
 - StoredEpisode
-  - 実メディアファイル `${baseDir}/${channelId}/${episodeId}/${number}.${ext}`
+  - 実メディアファイル `${baseDir}/media/${channelId}/${episodeId}/${number}.${ext}`
     - number は複数ファイルになるときの対応
-  - meta 情報ファイル `${baseDir}/${channelId}/${episodeId}/meta.json`
+  - meta 情報ファイル `${baseDir}/media/${channelId}/${episodeId}/meta.json`
     - meta = {
-      files = [実メディアファイル 1, 2, ...];
-      episode = episode
-      createdAt
+      episode: episode,
+      stored: [{storageType, storedKey, storedAt}]
       }
 
 ### transcriber

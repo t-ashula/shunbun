@@ -5,7 +5,7 @@ import { fileTypeFromBuffer } from "file-type";
 import mime from "mime";
 import type { Result } from "../core/result.mjs";
 import { Failure, Success } from "../core/result.mjs";
-import type { Episode } from "../core/types.mjs";
+import type { Episode, StoredEpisode } from "../core/types.mjs";
 import { getLogger } from "../core/logger.mjs";
 import type { DownloaderInput } from "../downloader/index.mjs";
 import { run as download } from "../downloader/index.mjs";
@@ -21,7 +21,9 @@ type RecorderInput = {
   storeConfig: StoreConfig;
 };
 
-type RecorderOutput = {};
+type RecorderOutput = {
+  storedEpisode: StoredEpisode;
+};
 class RecorderError extends Error {}
 
 const MEDIA_DIR = "media";
@@ -72,33 +74,37 @@ const staticRecording = async (
   const buffer = await response.arrayBuffer();
   const mediaType = await guessMediaType(contentType, buffer);
   try {
-    const mediaFilePath = path.join(
+    const storeDir = path.join(
       storeConfig.baseDir,
       MEDIA_DIR,
       episode.channelId,
       episode.id,
+    );
+    await fs.mkdir(storeDir, { recursive: true });
+
+    const mediaFilePath = path.join(
+      storeDir,
       `${String(0).padStart(5, "0")}.${mediaType.ext}`, // TODO: fileId ?
     );
-    fs.mkdir(path.dirname(mediaFilePath), { recursive: true });
-    fs.writeFile(mediaFilePath, Buffer.from(buffer));
-    const metaFilePath = path.join(
-      storeConfig.baseDir,
-      MEDIA_DIR,
-      episode.channelId,
-      episode.id,
-      `meta.json`,
-    );
-    const meta = {
-      files: [mediaFilePath],
-      episode: episode,
-      createdAt: new Date().toISOString(),
+    await fs.writeFile(mediaFilePath, Buffer.from(buffer));
+    const metaFilePath = path.join(storeDir, `meta.json`);
+    const storedEpisode: StoredEpisode = {
+      episode,
+      stored: [
+        {
+          storageType: "local", // TODO: いる？
+          storedAt: new Date(),
+          storedKey: mediaFilePath,
+        },
+      ],
     };
-    fs.writeFile(metaFilePath, JSON.stringify(meta));
+
+    await fs.writeFile(metaFilePath, JSON.stringify(storedEpisode, null, 2));
+    const output: RecorderOutput = { storedEpisode };
+    return new Success(output);
   } catch (err) {
     return new Failure(new RecorderError("record failed.", { cause: err }));
   }
-
-  return new Success({});
 };
 
 const run = async (
