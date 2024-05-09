@@ -27,6 +27,7 @@ type RecorderOutput = {
 class RecorderError extends Error {}
 
 const MEDIA_DIR = "media";
+const STORED_FILE = "stored.json";
 
 const logger = getLogger();
 
@@ -74,20 +75,26 @@ const staticRecording = async (
   const buffer = await response.arrayBuffer();
   const mediaType = await guessMediaType(contentType, buffer);
   try {
-    const storeDir = path.join(
+    const storedDir = path.join(
       storeConfig.baseDir,
-      MEDIA_DIR,
       episode.channelId,
       episode.id,
     );
-    await fs.mkdir(storeDir, { recursive: true });
+
+    const mediaDir = path.join(
+      storeConfig.baseDir,
+      episode.channelId,
+      episode.id,
+      MEDIA_DIR,
+    );
+    await fs.mkdir(mediaDir, { recursive: true });
 
     const mediaFilePath = path.join(
-      storeDir,
+      mediaDir,
       `${String(0).padStart(5, "0")}.${mediaType.ext}`, // TODO: fileId ?
     );
     await fs.writeFile(mediaFilePath, Buffer.from(buffer));
-    const metaFilePath = path.join(storeDir, `meta.json`);
+    const metaFilePath = path.join(storedDir, STORED_FILE);
     const storedEpisode: StoredEpisode = {
       episode,
       stored: [
@@ -103,6 +110,7 @@ const staticRecording = async (
     const output: RecorderOutput = { storedEpisode };
     return new Success(output);
   } catch (err) {
+    // TODO: rollback media files
     return new Failure(new RecorderError("record failed.", { cause: err }));
   }
 };
