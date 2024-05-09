@@ -7,6 +7,7 @@ import { Failure, Success } from "../../core/result.mjs";
 import type { Episode } from "../../core/types.mjs";
 import type { RecorderInput } from "../../recorder/index.mjs";
 import { run as record } from "../../recorder/index.mjs";
+import { save as saveStored } from "../../io/local/stored.mjs";
 import path from "node:path";
 
 const isEpisode = (obj: any): obj is Episode => {
@@ -67,14 +68,13 @@ const loadInput = async (
     .alias("help", "h")
     .parse();
 
+  const baseDir = path.resolve(arg.dataDir);
   const input = await (async (arg) => {
     if (arg.episode) {
       const episode = (await loadInput(arg.episode)).unwrap() as Episode;
       const ri: RecorderInput = {
-        episode: episode,
-        storeConfig: {
-          baseDir: path.resolve(arg.dataDir),
-        },
+        episode,
+        storeConfig: { baseDir },
       };
       return ri;
     }
@@ -85,6 +85,15 @@ const loadInput = async (
   })(arg);
 
   const output = (await record(input)).unwrap();
+  console.log(
+    `record done. media path=${output.storedEpisode.stored[0].storedKey}`,
+  );
+  const saved = (
+    await saveStored({
+      values: [output.storedEpisode],
+      config: { baseDir },
+    })
+  ).unwrap();
 
-  console.log(JSON.stringify(output.storedEpisode));
+  console.log(JSON.stringify(saved.saved));
 })();

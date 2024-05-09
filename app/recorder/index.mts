@@ -9,7 +9,6 @@ import type { Episode, StoredEpisode } from "../core/types.mjs";
 import { getLogger } from "../core/logger.mjs";
 import type { DownloaderInput } from "../downloader/index.mjs";
 import { run as download } from "../downloader/index.mjs";
-
 import { NotImplementedError } from "../core/errors.mjs";
 
 type StoreConfig = {
@@ -27,7 +26,6 @@ type RecorderOutput = {
 class RecorderError extends Error {}
 
 const MEDIA_DIR = "media";
-const STORED_FILE = "stored.json";
 
 const logger = getLogger();
 
@@ -75,12 +73,6 @@ const staticRecording = async (
   const buffer = await response.arrayBuffer();
   const mediaType = await guessMediaType(contentType, buffer);
   try {
-    const storedDir = path.join(
-      storeConfig.baseDir,
-      episode.channelId,
-      episode.id,
-    );
-
     const mediaDir = path.join(
       storeConfig.baseDir,
       episode.channelId,
@@ -94,7 +86,7 @@ const staticRecording = async (
       `${String(0).padStart(5, "0")}.${mediaType.ext}`, // TODO: fileId ?
     );
     await fs.writeFile(mediaFilePath, Buffer.from(buffer));
-    const metaFilePath = path.join(storedDir, STORED_FILE);
+
     const storedEpisode: StoredEpisode = {
       episode,
       stored: [
@@ -106,7 +98,6 @@ const staticRecording = async (
       ],
     };
 
-    await fs.writeFile(metaFilePath, JSON.stringify(storedEpisode, null, 2));
     const output: RecorderOutput = { storedEpisode };
     return new Success(output);
   } catch (err) {

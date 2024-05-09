@@ -127,7 +127,11 @@ recorder を動かす環境には十分なスペースのストレージがあ�
 
 ### transcriber
 
+stored episode を受け取って， transcribe api にメディア本体を食わせて，transcribe output を得る
+
 ### transcribe API
+
+media 本体もしくは，url として受け取って，vtt あたりを返す？
 
 ## local io
 

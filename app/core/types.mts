@@ -10,10 +10,11 @@ type Channel = {
   mediaURL: string;
 };
 
-const isChannel = (obj: any): obj is Channel => {
-  const keys = ["id", "name", "crawlURL", "mediaURL"];
-
+const hasKeys = (obj: any, keys: string[]): boolean => {
   return keys.every((key) => key in obj);
+};
+const isChannel = (obj: any): obj is Channel => {
+  return hasKeys(obj, ["id", "name", "crawlURL", "mediaURL"]);
 };
 
 type EpisodeID = Brand<string, "EpisodeID">;
@@ -32,9 +33,7 @@ type Episode = {
   channelId: ChannelID;
 };
 const isEpisode = (obj: any): obj is Episode => {
-  const keys = ["id", "channelId"]; // ?
-
-  return keys.every((key) => key in obj);
+  return hasKeys(obj, ["id", "channelId"]);
 };
 
 type StorageType = "local";
@@ -49,6 +48,11 @@ type StoredEpisode = {
   episode: Episode;
   stored: StoredEpisodeMeta[];
 };
+
+const isStoredEpisode = (obj: any): obj is StoredEpisode => {
+  return hasKeys(obj, ["episode", "stored"]) && isEpisode(obj["episode"]);
+};
+
 export type {
   Channel,
   ChannelID,
@@ -59,4 +63,4 @@ export type {
   StorageType,
 };
 
-export { isChannel, isEpisode };
+export { isChannel, isEpisode, isStoredEpisode };
