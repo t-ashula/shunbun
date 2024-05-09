@@ -25,9 +25,11 @@ const loadCrawlerInput = async (
     const d = await fs.readFile(filePath, "utf-8");
     const data = JSON.parse(d);
     if ("channel" in data) {
+      logger.info(`load file as crawlerInput. file=${filePath}}`);
       return new Success(data);
     }
     if ("crawlURL" in data) {
+      logger.info(`load file as channel. file=${filePath}}`);
       return new Success({ channel: data });
     }
     return new Failure(
@@ -35,8 +37,8 @@ const loadCrawlerInput = async (
         `unknown format json. path=${filePath} data=${JSON.stringify(data)}`,
       ),
     );
-  } catch (e) {
-    return new Failure(new Error(`load data error ${e}`));
+  } catch (err) {
+    return new Failure(new Error(`load data error`, { cause: err }));
   }
 };
 
@@ -64,7 +66,7 @@ const findOrCreateByCrawlURL = async (
     const err = loading.error;
     if (isENOENT(err.cause)) {
       // no data dir
-      console.warn(`no data dir. dir=${baseDir}`);
+      logger.warn(`no data dir. dir=${baseDir}`);
     } else {
       return new Failure(
         new Error("find channel failed", { cause: loading.error }),
@@ -131,6 +133,7 @@ const findOrCreateByCrawlURL = async (
   const baseDir = path.resolve(arg.dataDir);
   const output = (await crawl(input)).unwrap();
   const episodes = output.episodes;
+  console.log(`crawl done. episode count=${episodes.length}`);
 
   const saved = (
     await saveEpisodes({ values: episodes, config: { baseDir } })

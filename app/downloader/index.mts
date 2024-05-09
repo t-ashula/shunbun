@@ -1,6 +1,7 @@
 // downloader
 
-import { Failure, Success, type Result } from "../core/result.mjs";
+import type { Result } from "../core/result.mjs";
+import { Failure, Success } from "../core/result.mjs";
 import { getLogger } from "../core/logger.mjs";
 
 type RequestInit = globalThis.RequestInit; // FIXME:

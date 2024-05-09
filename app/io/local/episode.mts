@@ -1,8 +1,10 @@
 import path from "path";
 import fs from "fs/promises";
 
-import { Failure, Success, type Result } from "../../core/result.mjs";
+import type { Result } from "../../core/result.mjs";
+import { Failure, Success } from "../../core/result.mjs";
 import type { ChannelID, Episode, EpisodeID } from "../../core/types.mjs";
+import { isEpisode } from "../../core/types.mjs";
 import { getLogger } from "../../core/logger.mjs";
 import type {
   LoaderInput,
@@ -13,6 +15,7 @@ import type {
 } from "../index.mjs";
 
 import { LoaderError, SaverError } from "../index.mjs";
+import { listDirs } from "../../core/file.mjs";
 
 type EpisodeLoadConfig = {
   channelId: ChannelID;
@@ -32,17 +35,15 @@ type EpisodeLocalConfig = {
 type EpisodeLoadLocalConfig = EpisodeLoadConfig & EpisodeLocalConfig & {};
 type EpisodeSaveLocalConfig = EpisodeSaveConfig & EpisodeLocalConfig & {};
 
-const EPISODE_DIR = "episodes";
+const EPISODE_FILE = "episode.json";
+
 const logger = getLogger();
 
-const episodeDir = (config: EpisodeLocalConfig): string => {
-  return path.join(config.baseDir, EPISODE_DIR);
-};
 const channelsDir = (
   channelId: ChannelID,
   config: EpisodeLocalConfig,
 ): string => {
-  return path.join(episodeDir(config), channelId);
+  return path.join(config.baseDir, channelId);
 };
 
 const episodeFilePath = (
@@ -51,39 +52,30 @@ const episodeFilePath = (
 ): string => {
   return path.join(
     channelsDir(episode.channelId, config),
-    `${episode.id}.json`,
+    episode.id,
+    EPISODE_FILE,
   );
 };
 
-const episodeExists = async (
-  episode: Episode,
-  haystack: Episode[],
-): Promise<boolean> => {
-  // TODO: move somewhere
-  const sameEpisode = (lhs: Episode, rhs: Episode): boolean => {
-    if (lhs.channelId !== rhs.channelId) {
-      return false;
-    }
-    // same rss.guid
-    if (
-      lhs.theirId !== "" &&
-      rhs.theirId !== "" &&
-      lhs.theirId === rhs.theirId
-    ) {
-      return true;
-    }
-    // same target url
-    if (
-      lhs.streamURL !== "" &&
-      rhs.streamURL !== "" &&
-      lhs.streamURL === rhs.streamURL
-    ) {
-      return true;
-    }
-    // TODO: compare title, description, etc.
+// TODO: move somewhere
+const sameEpisode = (lhs: Episode, rhs: Episode): boolean => {
+  if (lhs.channelId !== rhs.channelId) {
     return false;
-  };
-  return haystack.some((ep) => sameEpisode(ep, episode));
+  }
+  // same rss.guid
+  if (lhs.theirId !== "" && rhs.theirId !== "" && lhs.theirId === rhs.theirId) {
+    return true;
+  }
+  // same target url
+  if (
+    lhs.streamURL !== "" &&
+    rhs.streamURL !== "" &&
+    lhs.streamURL === rhs.streamURL
+  ) {
+    return true;
+  }
+  // TODO: compare title, description, etc.
+  return false;
 };
 
 const saveEpisode = async (
@@ -111,6 +103,9 @@ const fetchSavedEpisodes = async (
   const result: Record<ChannelID, Episode[]> = {};
   for (const episode of episodes) {
     const channelId = episode.channelId;
+    logger.debug(
+      `fetchSavedEpisodes par channel. channelId=${channelId} episodeId=${episode.id} fetched=${channelId in result}`,
+    );
     if (channelId in result) {
       continue;
     }
@@ -122,9 +117,14 @@ const fetchSavedEpisodes = async (
       logger.warn(
         `load channels episodes failed. channelId=${channelId} error=${loading.error}`,
       );
-      continue; //
+      result[channelId] = [];
+      continue;
     }
-    result[channelId] = loading.value.values;
+    const episodes = loading.value.values;
+    logger.info(
+      `load episode done. channelId=${channelId} episodes.length=${episodes.length}`,
+    );
+    result[channelId] = episodes;
   }
   return result;
 };
@@ -138,7 +138,9 @@ const save = async (
   const saved: Episode[] = [];
   const results: SaverResult<EpisodeSaveOutput>[] = [];
   for (const episode of episodes) {
-    if (await episodeExists(episode, savedEpisodes[episode.channelId])) {
+    // TODO: reduce complexity
+    const already = savedEpisodes[episode.channelId] || [];
+    if (already.some((ep) => sameEpisode(ep, episode))) {
       results.push(new Success({}));
       continue;
     }
@@ -155,31 +157,45 @@ const load = async (
   input: LoaderInput<EpisodeLoadLocalConfig>,
 ): Promise<Result<LoaderOutput<Episode>, LoaderError>> => {
   const { config } = input;
-  const dir = channelsDir(config.channelId, config);
-  let files: string[] = [];
-  try {
-    files = (await fs.readdir(dir)).filter((file) => file.endsWith(".json"));
-  } catch (err) {
-    logger.warn(`read dir failed. dir=${dir} error=${err}`);
-    return new Failure(new LoaderError("read dir failed", { cause: err }));
+  const channelDir = channelsDir(config.channelId, config);
+  const listing = await listDirs(channelDir);
+  if (listing.isFailure()) {
+    // FIXME: return success?
+    logger.warn(
+      `read channels dir failed. dir=${channelDir} error=${listing.error}`,
+    );
+    return new Failure(
+      new LoaderError("read channels dir failed", { cause: listing.error }),
+    );
   }
 
   // TODO: episodeId filtering
-  try {
-    const data = await Promise.all(
-      files.map(async (file) => {
-        const filePath = path.join(dir, file);
-        const data = await fs.readFile(filePath, "utf-8");
-        return JSON.parse(data);
-      }),
-    );
-    const episodes = data; // TODO: filter by type check
+  const candidates = listing.value;
+  logger.info(
+    `listDir done. channelDir=${channelDir} candidates=${candidates.join(",")}`,
+  );
+  const episodes = await Promise.all(
+    candidates.map(async (dir) => {
+      const filePath = path.join(dir, EPISODE_FILE);
+      try {
+        const text = await fs.readFile(filePath, "utf-8");
+        const data = JSON.parse(text);
+        if (isEpisode(data)) {
+          return data;
+        }
+      } catch (err) {
+        // nothing.
+        // TODO: check errno
+        logger.info(
+          `read episode json file failed. path=${filePath} error=${err}`,
+        );
+      }
+      return;
+    }),
+  );
+  const values = episodes.filter((data) => data !== undefined);
 
-    return new Success({ values: episodes });
-  } catch (err) {
-    logger.warn(`read episode json file failed. error=${err}`);
-    return new Failure(new LoaderError("read files failed", { cause: err }));
-  }
+  return new Success({ values });
 };
 
 export type {

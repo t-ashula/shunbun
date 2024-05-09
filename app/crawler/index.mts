@@ -35,6 +35,8 @@ const run = async (
     );
   }
   const downloaded = downloading.value;
+  logger.info(`crawler download success. crawlURL=${channel.crawlURL}`);
+
   const ei: ExtractorInput = {
     channel,
     content: await stringify(downloaded.response),
@@ -50,9 +52,12 @@ const run = async (
       new CrawlerError("extraction failed.", { cause: extracting.error }),
     );
   }
+
+  const episodes = extracting.value.episodes;
+  logger.info(`crawler extraction success. episodes=${episodes.length}`);
   const output = {
     channel,
-    episodes: extracting.value.episodes,
+    episodes,
   };
   return new Success(output);
 };

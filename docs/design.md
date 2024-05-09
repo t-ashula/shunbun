@@ -116,15 +116,43 @@ episode を受け取って，recording Task にする
 recorder は自身の制御範囲内のストレージ (disk) に episode をダウンロード（レコーディング）して StoredEpisode にする
 recorder を動かす環境には十分なスペースのストレージがあることを前提とする
 
+- 実メディアファイル `${baseDir}/${channelId}/${episodeId}/media/${number}.${ext}`
+  - number は複数ファイルになるときの対応
 - StoredEpisode
-  - 実メディアファイル `${baseDir}/media/${channelId}/${episodeId}/${number}.${ext}`
-    - number は複数ファイルになるときの対応
-  - meta 情報ファイル `${baseDir}/media/${channelId}/${episodeId}/meta.json`
+  - meta 情報ファイル `${baseDir}/${channelId}/${episodeId}/stored.json`
     - meta = {
-      episode: episode,
+      episodeId: episodeId
       stored: [{storageType, storedKey, storedAt}]
       }
 
 ### transcriber
 
 ### transcribe API
+
+## local io
+
+- baseDir に対して， channelId のディレクトリ，episodeId のディレクトリを掘る
+- channel.json, episode.json, stored.json と型名ベースのファイルにする
+- media も `${chId}/${epId}/media/${num}.${ext}` にする
+
+- channel : `${baseDir}/${channelId}/channel.json`
+- episode : `${baseDir}/${channelId}/${episodeId}/episode.json`
+- stored : `${baseDir}/${channelId}/${episodeId}/stored.json`
+  - media : `${baseDir}/${channelId}/${episodeId}/media/${number}.${ext}`
+
+### index
+
+- dir 列挙では面倒なので `baseDir/index/` 各々の id を列挙したファイルを置きたい
+
+### load channels
+
+- baseDir に対して dir を列挙
+- 各 dir に対して channel.json がアレばそれを読み込む
+- 基本的には channelId を条件にする
+
+### load episodes
+
+- 基本 channelId でのフィルタリングを前提とし，
+- channelId がなければ baseDir に対して dir(channelDirs) を列挙
+- 各 channelDir に対して dir (episodeDirs) を列挙
+- 各 episodeDir に対して episode.json がアレば読み込む

@@ -1,8 +1,10 @@
 import path from "path";
 import fs from "node:fs/promises";
 
-import { Failure, Success, type Result } from "../../core/result.mjs";
+import type { Result } from "../../core/result.mjs";
+import { Failure, Success } from "../../core/result.mjs";
 import type { Channel, ChannelID } from "../../core/types.mjs";
+import { isChannel } from "../../core/types.mjs";
 import { getLogger } from "../../core/logger.mjs";
 import type {
   LoaderInput,
@@ -13,6 +15,7 @@ import type {
 } from "../index.mjs";
 
 import { LoaderError, SaverError } from "../index.mjs";
+import { listDirs } from "../../core/file.mjs";
 
 type ChannelLoadConfig = {
   channelId?: ChannelID;
@@ -29,18 +32,15 @@ type ChannelLocalConfig = {
 type ChannelLoadLocalConfig = ChannelLoadConfig & ChannelLocalConfig & {};
 type ChannelSaveLocalConfig = ChannelSaveConfig & ChannelLocalConfig & {};
 
-const CHANNEL_DIR = "channels";
-const logger = getLogger();
+const CHANNEL_FILE = "channel.json";
 
-const channelDir = (config: ChannelLocalConfig): string => {
-  return path.join(config.baseDir, CHANNEL_DIR);
-};
+const logger = getLogger();
 
 const channelFilePath = (
   channel: Channel,
   config: ChannelLocalConfig,
 ): string => {
-  return path.join(channelDir(config), `${channel.id}.json`);
+  return path.join(config.baseDir, channel.id, CHANNEL_FILE);
 };
 
 const saveChannel = async (
@@ -56,6 +56,8 @@ const saveChannel = async (
         return new Success({});
       } catch (err) {
         // nothing.
+        // TODO: check file exists
+        logger.info(`save channel skipped. id=${channel.id}`);
       }
     }
     await fs.mkdir(path.dirname(filePath), { recursive: true });
@@ -89,31 +91,37 @@ const load = async (
   input: LoaderInput<ChannelLoadLocalConfig>,
 ): Promise<Result<LoaderOutput<Channel>, LoaderError>> => {
   const { config } = input;
-  const dir = channelDir(config);
-  let files: string[] = [];
-  try {
-    files = (await fs.readdir(dir)).filter((file) => file.endsWith(".json"));
-  } catch (err) {
-    logger.warn(`read dir failed. dir=${dir} error=${err}`);
-    return new Failure(new LoaderError("read dir failed", { cause: err }));
+  const dir = config.baseDir;
+  const listing = await listDirs(dir);
+  if (listing.isFailure()) {
+    logger.warn(`read dir failed. dir=${dir} error=${listing.error}`);
+    return new Failure(
+      new LoaderError("read dir failed", { cause: listing.error }),
+    );
   }
 
   // TODO: channelId filtering
-  try {
-    const data = await Promise.all(
-      files.map(async (file) => {
-        const filePath = path.join(dir, file);
-        const data = await fs.readFile(filePath, "utf-8");
-        return JSON.parse(data);
-      }),
-    );
-    const channels = data; // TODO: filter by type check
+  const candidates = listing.value;
+  const channels = await Promise.all(
+    candidates.map(async (dir) => {
+      const filePath = path.join(dir, CHANNEL_FILE);
+      try {
+        const text = await fs.readFile(filePath, "utf-8");
+        const data = JSON.parse(text);
+        if (isChannel(data)) {
+          return data;
+        }
+      } catch (err) {
+        // nothing.
+        // TODO: check ENOENT, EACCES, etc. ?
+      }
+      return;
+    }),
+  );
 
-    return new Success({ values: channels });
-  } catch (err) {
-    logger.warn(`read channel json file failed. error=${err}`);
-    return new Failure(new LoaderError("read files failed", { cause: err }));
-  }
+  const values = channels.filter((data) => data !== undefined);
+
+  return new Success({ values });
 };
 
 export type {
