@@ -8,7 +8,7 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-app.config["UPLOAD_DIR"] = "./tmp/"
+app.config["UPLOAD_DIR"] = "./tmp/trans"
 app.json.ensure_ascii = False
 
 
@@ -71,6 +71,10 @@ def transcribe():
     # 処理時間を計測
     result = pipe(filename, return_timestamps=True, generate_kwargs=generate_kwargs)
     duration = time.time() - start_time
+    try:
+        os.remove(filename)
+    except:
+        pass
     segments = list(
         map(
             lambda c: {
