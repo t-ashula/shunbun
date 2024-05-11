@@ -1,4 +1,4 @@
 {
-  "cSpell.words": ["datetime"],
+  "cSpell.words": ["datetime", "jsonify"],
   "eslint.workingDirectories": ["./app/"]
 }

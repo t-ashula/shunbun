@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "transcriber"
+version = "0.1.0"
+description = ""
+authors = ["t-ashula <t.ashula+github@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+transformers = "^4.40.2"
+punctuators = "0.0.5"
+accelerate = "^0.30.0"
+torchaudio = "^2.3.0"
+stable-ts = "2.16.0"
+datasets = "^2.19.1"
+librosa = "^0.10.2"
+soundfile = "^0.12.1"
+flask = "^3.0.3"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+isort = "^5.13.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"

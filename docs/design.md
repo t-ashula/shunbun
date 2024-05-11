@@ -5,13 +5,17 @@
 - 関数型っぽく
 - `Result<T,E> = Success<T> | Failure<F>` でエラー処理する
   - `throw` させない
-- 各機能は `FuncInput` をもらって `Result<FuncOutput, FuncError>` もしくは `Promise<Result<FuncOutput, FuncError>>` を返す
+- 各機能は `FuncInput` をもらって `Promise<Result<FuncOutput, FuncError>>` を返す
 - 機能ごとにディレクトリ（パッケージ）として分ける
 - 各機能は `const run = async(input:FuncInput): Promise<Result<FuncOutput, FuncError>> => {}` として実装して `export {run}` する
 - 使う側は `import { run as func } from "./func/"` とする
 
 - `FuncInput` をどこからもらって `FuncOutput` をどこに渡すかは IO (Loader/Saver) として実装する
-- `loader/FUNC/TARGET.mts`, `saver/FUNC/TARGET.mts`
+  - `io/TARGET.mts` に `const load = async (input: LoaderInput): Promise<Result<LoaderOutput, LoaderError>>` と`const save = async (input: SaverInput): Promise<Result<SaverOutput, SaverError>>` とを実装して `export { load, save }`
+  - 使う側は `import { load as loadModel } from "~/io/local/model.mts"`
+    - local とか io の場所を切り替えるのは使う側の責務とする
+    - `io/model.mts` に自動的に対象を選ぶためのラッパーを作らない
+    - `import {load} from "~/io/local/model.mts"`, `import {save} from "~/io/rdb/model.mts`" とかして disk から db にというのもあり？
 
 ## Types
 
@@ -128,10 +132,52 @@ recorder を動かす環境には十分なスペースのストレージがあ�
 ### transcriber
 
 stored episode を受け取って， transcribe api にメディア本体を食わせて，transcribe output を得る
+transcribe output -> transcript
 
 ### transcribe API
 
-media 本体もしくは，url として受け取って，vtt あたりを返す？
+- media 本体を受け取って json で結果を返す http api
+- local での実行でも，sagemaker とか lambda とかに変えられるように http
+- モデルの読み込みのオーバーヘッドがそこそこあるので常時起動的にはしたい
+- vtt 自体は行志向のデータなのでちょっと扱いがめんどい
+- whisper だとちょっと過剰
+  - ```ts
+    {
+      "text":string,
+      "segments": {
+        "id": number,
+        "start": number,
+        "end": number,
+        "text": string,
+        "seek": number,
+        "tokens":number[],
+        "temperature": number,
+      } []
+    }
+    ```
+- ReazonSpeech `reasonspeach-nemo-asr` cli だと，これだけが得られる？
+  - ```ts
+    {
+      "start_seconds":number,
+      "end_seconds":number,
+      "text":string
+    }
+    ```
+- vtt だと一つ一つのを cue block と呼ぶ
+- start/end/text の 3 つがあれば vtt とか他のにもなんともでできる？
+  - whisper のをベースに，こうする
+  - ```ts
+    {
+      "text": string,
+      "segments": {
+        "start": number,
+        "end": number,
+        "text": string
+      } [],
+      "stats": Record<string, any>
+    }
+    ```
+  - stats には実推論時間とかそういうのをいれる予約
 
 ## local io
 
@@ -143,6 +189,7 @@ media 本体もしくは，url として受け取って，vtt あたりを返す
 - episode : `${baseDir}/${channelId}/${episodeId}/episode.json`
 - stored : `${baseDir}/${channelId}/${episodeId}/stored.json`
   - media : `${baseDir}/${channelId}/${episodeId}/media/${number}.${ext}`
+- transcript : `${baseDir}/${channelId}/${episodeId}/transcript.json`
 
 ### index
 
