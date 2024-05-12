@@ -188,7 +188,7 @@ const transcribeFile = async (
         end: seg.end + index * SPLIT_SECONDS,
         text: seg.text,
       }));
-      acc.segments.concat(offsetSegments);
+      acc.segments.push(...offsetSegments);
       return acc;
     },
     { text: "", segments: [], lang: scripts[0].lang },
