@@ -11,7 +11,10 @@ type Channel = {
 };
 
 const hasKeys = (obj: any, keys: string[]): boolean => {
-  return keys.every((key) => key in obj);
+  if (obj) {
+    return keys.every((key) => key in obj);
+  }
+  return false;
 };
 const isChannel = (obj: any): obj is Channel => {
   return hasKeys(obj, ["id", "name", "crawlURL", "mediaURL"]);
@@ -53,6 +56,32 @@ const isStoredEpisode = (obj: any): obj is StoredEpisode => {
   return hasKeys(obj, ["episode", "stored"]) && isEpisode(obj["episode"]);
 };
 
+type TranscriberAPIResponse = {
+  text: string;
+  lang: string;
+  segments: {
+    start: number;
+    end: number;
+    text: string;
+  }[];
+  stats?: Record<string, any>;
+};
+
+const isTranscriberAPIResponse = (obj: any): obj is TranscriberAPIResponse => {
+  return hasKeys(obj, ["text", "lang", "segments"]);
+};
+
+type TranscriptSegment = {
+  text: string;
+  start: number;
+  end: number;
+};
+type Transcript = {
+  text: string;
+  lang: string;
+  segments: TranscriptSegment[];
+};
+
 export type {
   Channel,
   ChannelID,
@@ -61,6 +90,9 @@ export type {
   StreamingType,
   StoredEpisode,
   StorageType,
+  TranscriberAPIResponse,
+  TranscriptSegment,
+  Transcript,
 };
 
-export { isChannel, isEpisode, isStoredEpisode };
+export { isChannel, isEpisode, isStoredEpisode, isTranscriberAPIResponse };

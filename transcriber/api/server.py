@@ -70,7 +70,7 @@ def transcribe():
     start_time = time.time()
     # 処理時間を計測
     result = pipe(filename, return_timestamps=True, generate_kwargs=generate_kwargs)
-    duration = time.time() - start_time
+    process_time = time.time() - start_time
     try:
         os.remove(filename)
     except:
@@ -88,11 +88,9 @@ def transcribe():
     return jsonify(
         {
             "text": result["text"],
-            "file": filename,
             "lang": lang,
-            "original": media.filename,
             "segments": segments,
-            "duration": duration,
+            "stats": {"process_time": process_time},
         }
     )
 

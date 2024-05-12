@@ -6,11 +6,14 @@ import { getLogger } from "../core/logger.mjs";
 
 type RequestInit = globalThis.RequestInit; // FIXME:
 
+type HTTPMethods = "GET" | "POST" | "HEAD" | "DELETE" | "PUT";
+
 type DownloaderInput = {
   requestUrl: string;
 
   player?: DownloadPlayers;
-  method?: string;
+  method?: HTTPMethods;
+  body?: FormData | URLSearchParams | string;
   userAgent?: string;
   headers?: Record<string, string>;
   waitTimeout?: number;
@@ -94,6 +97,7 @@ const generateInit = (input: DownloaderInput): [RequestInit, () => void] => {
     method,
     headers,
     signal,
+    body: input.body,
   };
 
   return [init, defer];
