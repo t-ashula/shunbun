@@ -9,6 +9,7 @@ import type {
   StoredEpisode,
   TranscriberAPIResponse,
   Transcript,
+  EpisodeTranscript,
 } from "../core/types.mjs";
 import { isTranscriberAPIResponse } from "../core/types.mjs";
 import { run as download, stringify } from "../downloader/index.mjs";
@@ -26,8 +27,7 @@ type TranscriberInput = {
   config: TranscriberConfig;
 };
 type TranscriberOutput = {
-  storedEpisode: StoredEpisode;
-  transcripts: Transcript[];
+  episodeTranscript: EpisodeTranscript;
 };
 class TranscriberError extends Error {}
 
@@ -35,15 +35,15 @@ const SPLIT_SECONDS = 30;
 const logger = getLogger();
 
 const tryParseAPIResponse = async (
-  response: Response,
+  response: Response
 ): Promise<Result<TranscriberAPIResponse, TranscriberError>> => {
   const text = await stringify(response);
   if (!response.ok) {
     logger.error(`api call failed. status=${response.status} message=${text}`);
     return new Failure(
       new TranscriberError(
-        `transcriber api call not ok status=${response.status}`,
-      ),
+        `transcriber api call not ok status=${response.status}`
+      )
     );
   }
 
@@ -56,7 +56,7 @@ const tryParseAPIResponse = async (
     }
   } catch (err) {
     return new Failure(
-      new TranscriberError("api response parse failed", { cause: err }),
+      new TranscriberError("api response parse failed", { cause: err })
     );
   }
 };
@@ -76,10 +76,11 @@ const getExtension = async (mediaFilePath: string): Promise<string> => {
 
 const splitMediaFile = async (
   mediaFilePath: string,
-  config: { splitSecond: number; workDir: string },
+  config: { splitSecond: number; workDir: string }
 ): Promise<Result<string[], Error>> => {
   const ext: string = await getExtension(mediaFilePath);
   try {
+    await fs.mkdir(config.workDir);
     await new Promise<void>((resolve, reject) => {
       //     ffmpeg -i "$input_file" -f segment -segment_time "$segment_time" -c copy -reset_timestamps 1 "${output_prefix}_$4%03d.m4a"
       ffmpeg(mediaFilePath)
@@ -93,10 +94,11 @@ const splitMediaFile = async (
         })
         .on("stderr", (line) => logger.info(`ffmpeg stderr: ${line}`))
         .on("stdout", (line) => logger.info(`ffmpeg stdout: ${line}`))
-        .addOptions([`-loglevel error`])
+        .addOptions([`-loglevel info`])
         .outputOptions([
-          `-segment_time ${config.splitSecond}`,
+          `-c copy`,
           `-f segment`,
+          `-segment_time ${config.splitSecond}`,
           `-reset_timestamps 1`,
         ])
         .output(`${config.workDir}/%03d.${ext}`)
@@ -116,7 +118,7 @@ const splitMediaFile = async (
 
 const fetchTranscribeAPI = async (
   mediaFilePath: string,
-  config: { apiEndpoint: string },
+  config: { apiEndpoint: string }
 ): Promise<Result<Transcript, Error>> => {
   const buffer = await fs.readFile(mediaFilePath);
   const mediaBlob = new Blob([buffer]);
@@ -134,7 +136,7 @@ const fetchTranscribeAPI = async (
     return new Failure(
       new TranscriberError("transcriber api call failed", {
         cause: downloading.error,
-      }),
+      })
     );
   }
 
@@ -155,7 +157,7 @@ const fetchTranscribeAPI = async (
 
 const transcribeFile = async (
   mediaFilePath: string,
-  config: { apiEndpoint: string },
+  config: { apiEndpoint: string }
 ): Promise<Result<Transcript, Error>> => {
   const workDir = path.resolve(path.join(os.tmpdir(), randomUUID()));
   const splitting = await splitMediaFile(mediaFilePath, {
@@ -189,14 +191,14 @@ const transcribeFile = async (
       acc.segments.concat(offsetSegments);
       return acc;
     },
-    { text: "", segments: [], lang: scripts[0].lang },
+    { text: "", segments: [], lang: scripts[0].lang }
   );
 
   return new Success(merged);
 };
 
 const run = async (
-  input: TranscriberInput,
+  input: TranscriberInput
 ): Promise<Result<TranscriberOutput, TranscriberError>> => {
   logger.debug(`transcriber.run called. input=${input}`);
 
@@ -211,15 +213,17 @@ const run = async (
       return new Failure(
         new TranscriberError("transcribe file failed", {
           cause: transcribing.error,
-        }),
+        })
       );
     } else {
       transcripts.push(transcribing.value);
     }
   }
   const output = {
-    storedEpisode,
-    transcripts,
+    episodeTranscript: {
+      episode: storedEpisode.episode,
+      transcripts,
+    },
   };
   return new Success(output);
 };

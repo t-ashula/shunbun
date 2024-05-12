@@ -17,6 +17,13 @@
     - `io/model.mts` に自動的に対象を選ぶためのラッパーを作らない
     - `import {load} from "~/io/local/model.mts"`, `import {save} from "~/io/rdb/model.mts`" とかして disk から db にというのもあり？
 
+## TODO
+
+- neverthrow とかでちゃんと関数型に
+- isFailure のチェック・早期リターンも極力減らす
+- log もっといれる
+  - 一方で，result の合成も進めて Failure ごとにログださないようになんとかする
+
 ## Types
 
 ### Channel
@@ -137,6 +144,8 @@ transcribe output -> transcript
 ### transcribe API
 
 - media 本体を受け取って json で結果を返す http api
+  - media: file
+  - lang: string
 - local での実行でも，sagemaker とか lambda とかに変えられるように http
 - モデルの読み込みのオーバーヘッドがそこそこあるので常時起動的にはしたい
 - vtt 自体は行志向のデータなのでちょっと扱いがめんどい

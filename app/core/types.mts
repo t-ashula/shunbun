@@ -82,6 +82,18 @@ type Transcript = {
   segments: TranscriptSegment[];
 };
 
+type EpisodeTranscript = {
+  episode: Episode;
+  transcripts: Transcript[];
+};
+
+const isTranscript = (obj: any): obj is Transcript => {
+  return hasKeys(obj, ["text", "lang", "segments"]);
+};
+const isEpisodeTranscript = (obj: any): obj is EpisodeTranscript => {
+  return hasKeys(obj, ["episode", "transcripts"]);
+};
+
 export type {
   Channel,
   ChannelID,
@@ -93,6 +105,14 @@ export type {
   TranscriberAPIResponse,
   TranscriptSegment,
   Transcript,
+  EpisodeTranscript,
 };
 
-export { isChannel, isEpisode, isStoredEpisode, isTranscriberAPIResponse };
+export {
+  isChannel,
+  isEpisode,
+  isStoredEpisode,
+  isTranscriberAPIResponse,
+  isTranscript,
+  isEpisodeTranscript,
+};
