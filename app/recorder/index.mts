@@ -33,15 +33,15 @@ const guessMediaType = async (
   contentType: string,
   buffer: ArrayBuffer,
 ): Promise<{ ext: string; contentType: string }> => {
+  const guess = await fileTypeFromBuffer(buffer);
+  if (guess) {
+    return { ext: guess.ext, contentType: guess.mime };
+  }
   if (contentType) {
     const ext = mime.getExtension(contentType);
     if (ext) {
       return { ext, contentType };
     }
-  }
-  const guess = await fileTypeFromBuffer(buffer);
-  if (guess) {
-    return { ext: guess.ext, contentType: guess.mime };
   }
   return { ext: "bin", contentType: "application/octet-stream" }; // TODO: default content type, ext
 };
