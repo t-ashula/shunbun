@@ -23,24 +23,22 @@ type ChannelLoadConfig = {
 type ChannelSaveConfig = {
   update?: boolean; // TODO: move to SaveConfig.
 };
-
-type ChannelSaveOutput = {};
-
 type ChannelLocalConfig = {
   baseDir: string;
 };
 type ChannelLoadLocalConfig = ChannelLoadConfig & ChannelLocalConfig & {};
 type ChannelSaveLocalConfig = ChannelSaveConfig & ChannelLocalConfig & {};
+type ChannelSaveOutput = {};
 
 const CHANNEL_FILE = "channel.json";
 
 const logger = getLogger();
 
 const channelFilePath = (
-  channel: Channel,
+  channelId: ChannelID,
   config: ChannelLocalConfig,
 ): string => {
-  return path.join(config.baseDir, channel.id, CHANNEL_FILE);
+  return path.join(config.baseDir, channelId, CHANNEL_FILE);
 };
 
 const saveChannel = async (
@@ -48,7 +46,7 @@ const saveChannel = async (
   config: ChannelSaveLocalConfig,
 ): Promise<SaverResult<ChannelSaveOutput>> => {
   try {
-    const filePath = channelFilePath(channel, config);
+    const filePath = channelFilePath(channel.id, config);
 
     if (!config.update) {
       try {
@@ -87,10 +85,31 @@ const save = async (
   return new Success({ results, saved });
 };
 
-const load = async (
-  input: LoaderInput<ChannelLoadLocalConfig>,
+const loadChannel = async (
+  channelId: ChannelID,
+  config: ChannelLoadLocalConfig,
 ): Promise<Result<LoaderOutput<Channel>, LoaderError>> => {
-  const { config } = input;
+  const filePath = channelFilePath(channelId, config);
+  try {
+    const text = await fs.readFile(filePath, "utf-8");
+    const data = JSON.parse(text);
+    if (isChannel(data)) {
+      return new Success({ values: [data] });
+    }
+    logger.warn(`unknown data found. path=${filePath}`);
+    return new Success({ values: [] });
+  } catch (err) {
+    logger.error(
+      `local load channel failed. channelId=${channelId} error=${err}`,
+    );
+    return new Failure(new LoaderError("load channel failed", { cause: err }));
+  }
+};
+
+const listChannelIds = async (
+  config: ChannelLocalConfig,
+): Promise<Result<string[], Error>> => {
+  // TODO: use index file
   const dir = config.baseDir;
   const listing = await listDirs(dir);
   if (listing.isFailure()) {
@@ -99,27 +118,33 @@ const load = async (
       new LoaderError("read dir failed", { cause: listing.error }),
     );
   }
+  return listing;
+};
 
-  // TODO: channelId filtering
-  const candidates = listing.value;
-  const channels = await Promise.all(
-    candidates.map(async (dir) => {
-      const filePath = path.join(dir, CHANNEL_FILE);
-      try {
-        const text = await fs.readFile(filePath, "utf-8");
-        const data = JSON.parse(text);
-        if (isChannel(data)) {
-          return data;
-        }
-      } catch (err) {
-        // nothing.
-        // TODO: check ENOENT, EACCES, etc. ?
-      }
-      return;
-    }),
+const load = async (
+  input: LoaderInput<ChannelLoadLocalConfig>,
+): Promise<Result<LoaderOutput<Channel>, LoaderError>> => {
+  const { config } = input;
+  if (config.channelId !== undefined) {
+    return loadChannel(config.channelId, config);
+  }
+
+  const listing = await listChannelIds(config);
+  if (listing.isFailure()) {
+    return new Failure(
+      new LoaderError("list channel id failed", { cause: listing.error }),
+    );
+  }
+  const ids = listing.value;
+  const results = await Promise.all(
+    ids.map(async (id) => await loadChannel(id as ChannelID, config)),
   );
-
-  const values = channels.filter((data) => data !== undefined);
+  // TODO: Failure 握りつぶして良い？
+  const values = results
+    .filter((r) => r.isSuccess())
+    .map((r) => r.value.values)
+    .flat()
+    .filter((ch) => ch !== undefined);
 
   return new Success({ values });
 };

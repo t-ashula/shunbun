@@ -190,9 +190,7 @@ transcribe output -> transcript
 
 ## local io
 
-- baseDir に対して， channelId のディレクトリ，episodeId のディレクトリを掘る
-- channel.json, episode.json, stored.json と型名ベースのファイルにする
-- media も `${chId}/${epId}/media/${num}.${ext}` にする
+- baseDir に対して，channel/episode を掘り，stored/media, script のディレクトリを掘る
 
 - channel : `${baseDir}/${channelId}/channel.json`
 - episode : `${baseDir}/${channelId}/${episodeId}/episode.json`
@@ -202,12 +200,12 @@ transcribe output -> transcript
 
 ### index
 
-- dir 列挙では面倒なので `baseDir/index/` 各々の id を列挙したファイルを置きたい
+- dir 列挙では面倒なので `baseDir/index/${model}.json` に各々の id を列挙したファイルを置きたい
 
 ### load channels
 
 - baseDir に対して dir を列挙
-- 各 dir に対して channel.json がアレばそれを読み込む
+- baseDir/${dir}/channel.json がアレば読む
 - 基本的には channelId を条件にする
 
 ### load episodes

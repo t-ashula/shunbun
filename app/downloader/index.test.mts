@@ -9,6 +9,7 @@ import {
 } from "vitest";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
+import type { HTTPMethods } from "./index.mjs";
 import { run, DownloaderTimeoutError } from "./index.mjs";
 
 const sleep = (msec: number) =>
@@ -74,7 +75,10 @@ describe("run", () => {
     expect(result.value.request.method).toBe("GET");
   });
   it("can change method", async () => {
-    const input = { requestUrl: "https://mock.test/success", method: "POST" };
+    const input = {
+      requestUrl: "https://mock.test/success",
+      method: "POST" as HTTPMethods,
+    };
     const result = await run(input);
 
     assert(result.isSuccess() === true); // FIXME:

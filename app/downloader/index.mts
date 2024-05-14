@@ -103,5 +103,5 @@ const generateInit = (input: DownloaderInput): [RequestInit, () => void] => {
   return [init, defer];
 };
 
-export type { DownloaderInput, DownloaderOutput };
+export type { DownloaderInput, DownloaderOutput, HTTPMethods };
 export { run, stringify, DownloaderError, DownloaderTimeoutError };

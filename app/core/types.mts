@@ -48,7 +48,7 @@ type StoredEpisodeMeta = {
 };
 
 type StoredEpisode = {
-  episode: Episode;
+  episodeId: EpisodeID;
   stored: StoredEpisodeMeta[];
 };
 
@@ -83,7 +83,7 @@ type Transcript = {
 };
 
 type EpisodeTranscript = {
-  episode: Episode;
+  episodeId: EpisodeID;
   transcripts: Transcript[];
 };
 

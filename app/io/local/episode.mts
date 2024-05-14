@@ -14,26 +14,25 @@ import type {
   SaverResult,
 } from "../index.mjs";
 
-import { LoaderError, SaverError } from "../index.mjs";
+import { LoaderError, SaverError } from "../../io/index.mjs";
+import { load as loadChannels } from "../../io/local/channel.mjs";
 import { listDirs } from "../../core/file.mjs";
 
 type EpisodeLoadConfig = {
-  channelId: ChannelID;
   episodeId?: EpisodeID;
+  channelId?: ChannelID;
 };
-
 type EpisodeSaveConfig = {
   update?: boolean;
 };
-
-type EpisodeSaveOutput = {};
-
 type EpisodeLocalConfig = {
   baseDir: string;
 };
 
 type EpisodeLoadLocalConfig = EpisodeLoadConfig & EpisodeLocalConfig & {};
 type EpisodeSaveLocalConfig = EpisodeSaveConfig & EpisodeLocalConfig & {};
+
+type EpisodeSaveOutput = {};
 
 const EPISODE_FILE = "episode.json";
 
@@ -47,14 +46,11 @@ const channelsDir = (
 };
 
 const episodeFilePath = (
-  episode: Episode,
+  channelId: ChannelID,
+  episodeId: EpisodeID,
   config: EpisodeLocalConfig,
 ): string => {
-  return path.join(
-    channelsDir(episode.channelId, config),
-    episode.id,
-    EPISODE_FILE,
-  );
+  return path.join(channelsDir(channelId, config), episodeId, EPISODE_FILE);
 };
 
 // TODO: move somewhere
@@ -83,7 +79,7 @@ const saveEpisode = async (
   config: EpisodeSaveLocalConfig,
 ): Promise<SaverResult<EpisodeSaveOutput>> => {
   try {
-    const filePath = episodeFilePath(episode, config);
+    const filePath = episodeFilePath(episode.channelId, episode.id, config);
     await fs.mkdir(path.dirname(filePath), { recursive: true });
     await fs.writeFile(filePath, JSON.stringify(episode, null, 2));
     return new Success({});
@@ -95,38 +91,34 @@ const saveEpisode = async (
   }
 };
 
-const fetchSavedEpisodes = async (
+const fetchSavedEpisodesOf = async (
   episodes: Episode[],
   config: EpisodeSaveLocalConfig,
-): Promise<Record<ChannelID, Episode[]>> => {
-  // const channels = episodes.map(e => e.channelId);
-  const result: Record<ChannelID, Episode[]> = {};
-  for (const episode of episodes) {
-    const channelId = episode.channelId;
-    logger.debug(
-      `fetchSavedEpisodes par channel. channelId=${channelId} episodeId=${episode.id} fetched=${channelId in result}`,
-    );
-    if (channelId in result) {
-      continue;
-    }
-
-    const loading = await load({
-      config: { baseDir: config.baseDir, channelId },
+): Promise<Result<Record<ChannelID, Episode[]>, Error>> => {
+  const channelIds = episodes.map((e) => e.channelId);
+  const episodeMap: Record<ChannelID, Episode[]> = {};
+  const episodeLoading = await Promise.all(
+    channelIds.map(async (channelId) => {
+      return await load({
+        config: { baseDir: config.baseDir, channelId: channelId },
+      });
+    }),
+  );
+  // TODO: Failure ?
+  //
+  episodeLoading
+    .filter((r) => r.isSuccess())
+    .map((r) => r.value.values)
+    .flat()
+    .forEach((ep) => {
+      const channelId = ep.channelId;
+      if (channelId in episodeMap) {
+        return;
+      }
+      episodeMap[channelId] ||= [];
+      episodeMap[channelId].push(ep);
     });
-    if (loading.isFailure()) {
-      logger.warn(
-        `load channels episodes failed. channelId=${channelId} error=${loading.error}`,
-      );
-      result[channelId] = [];
-      continue;
-    }
-    const episodes = loading.value.values;
-    logger.info(
-      `load episode done. channelId=${channelId} episodes.length=${episodes.length}`,
-    );
-    result[channelId] = episodes;
-  }
-  return result;
+  return new Success(episodeMap);
 };
 
 const save = async (
@@ -134,7 +126,13 @@ const save = async (
 ): Promise<Result<SaverOutput<Episode, EpisodeSaveOutput>, SaverError>> => {
   const { values: episodes, config } = input;
 
-  const savedEpisodes = await fetchSavedEpisodes(episodes, config);
+  let savedEpisodes: Record<ChannelID, Episode[]> = {};
+  const fetching = await fetchSavedEpisodesOf(episodes, config);
+  if (fetching.isFailure()) {
+    // pass
+  } else {
+    savedEpisodes = fetching.value;
+  }
   const saved: Episode[] = [];
   const results: SaverResult<EpisodeSaveOutput>[] = [];
   for (const episode of episodes) {
@@ -153,49 +151,96 @@ const save = async (
   return new Success({ results, saved });
 };
 
+const loadEpisode = async (
+  channelId: ChannelID,
+  episodeId: EpisodeID,
+  config: EpisodeLocalConfig,
+): Promise<Result<LoaderOutput<Episode>, LoaderError>> => {
+  const filePath = episodeFilePath(channelId, episodeId, config);
+  try {
+    const text = await fs.readFile(filePath, "utf-8");
+    const data = JSON.parse(text);
+    if (isEpisode(data)) {
+      return new Success({ values: [data] });
+    }
+    logger.warn(`unknown data found. path=${filePath}`);
+    return new Success({ values: [] }); //
+  } catch (err) {
+    // TODO: check errno?
+    logger.error(
+      `read episode json file failed. path=${filePath} error=${err}`,
+    );
+    return new Failure(new LoaderError("load episode failed", { cause: err }));
+  }
+};
+
+const loadChannelEpisode = async (
+  channelId: ChannelID,
+  config: EpisodeLocalConfig,
+): Promise<Result<LoaderOutput<Episode>, LoaderError>> => {
+  const dir = channelsDir(channelId, config);
+  const listing = await listDirs(dir);
+  if (listing.isFailure()) {
+    return new Failure(listing.error);
+  }
+  const candidates = listing.value;
+  const results = await Promise.all(
+    candidates.map(async (ep) => {
+      return loadEpisode(channelId, ep as EpisodeID, config);
+    }),
+  );
+  const episodes = results
+    .filter((r) => r.isSuccess())
+    .map((r) => r.value.values)
+    .flat();
+  return new Success({ values: episodes });
+};
+
 const load = async (
   input: LoaderInput<EpisodeLoadLocalConfig>,
 ): Promise<Result<LoaderOutput<Episode>, LoaderError>> => {
   const { config } = input;
-  const channelDir = channelsDir(config.channelId, config);
-  const listing = await listDirs(channelDir);
-  if (listing.isFailure()) {
-    // FIXME: return success?
-    logger.warn(
-      `read channels dir failed. dir=${channelDir} error=${listing.error}`,
-    );
+
+  if (config.channelId !== undefined) {
+    if (config.episodeId !== undefined) {
+      // single
+      return loadEpisode(config.channelId, config.episodeId, config);
+    }
+    // channels
+    return loadChannelEpisode(config.channelId, config);
+  }
+
+  // no channelId
+  const channelLoading = await loadChannels({
+    config: { baseDir: config.baseDir },
+  });
+  if (channelLoading.isFailure()) {
     return new Failure(
-      new LoaderError("read channels dir failed", { cause: listing.error }),
+      new LoaderError("load episode error", { cause: channelLoading.error }),
     );
   }
 
-  // TODO: episodeId filtering
-  const candidates = listing.value;
-  logger.info(
-    `listDir done. channelDir=${channelDir} candidates=${candidates.join(",")}`,
-  );
-  const episodes = await Promise.all(
-    candidates.map(async (dir) => {
-      const filePath = path.join(dir, EPISODE_FILE);
-      try {
-        const text = await fs.readFile(filePath, "utf-8");
-        const data = JSON.parse(text);
-        if (isEpisode(data)) {
-          return data;
-        }
-      } catch (err) {
-        // nothing.
-        // TODO: check errno
-        logger.info(
-          `read episode json file failed. path=${filePath} error=${err}`,
-        );
-      }
-      return;
+  const { values: channels } = channelLoading.value;
+  const results = await Promise.all(
+    channels.map(async (ch) => {
+      return loadChannelEpisode(ch.id, config);
     }),
   );
-  const values = episodes.filter((data) => data !== undefined);
+  const episodes = results
+    .filter((r) => r.isSuccess())
+    .map((r) => r.value.values)
+    .flat()
+    .filter((ep) => ep !== undefined);
+  if (config.episodeId !== undefined) {
+    const episode = episodes.find((ep) => ep.id === config.episodeId);
+    if (episode !== undefined) {
+      return new Success({ values: [episode] });
+    }
+    // XXX: or Success({ values: [] }) ?
+    return new Failure(new LoaderError("episode not found"));
+  }
 
-  return new Success({ values });
+  return new Success({ values: episodes });
 };
 
 export type {

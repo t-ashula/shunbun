@@ -221,7 +221,7 @@ const run = async (
   }
   const output = {
     episodeTranscript: {
-      episode: storedEpisode.episode,
+      episodeId: storedEpisode.episodeId,
       transcripts,
     },
   };

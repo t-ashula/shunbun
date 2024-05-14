@@ -88,7 +88,7 @@ const staticRecording = async (
     await fs.writeFile(mediaFilePath, Buffer.from(buffer));
 
     const storedEpisode: StoredEpisode = {
-      episode,
+      episodeId: episode.id,
       stored: [
         {
           storageType: "local", // TODO: いる？
