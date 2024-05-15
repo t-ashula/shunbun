@@ -1,13 +1,9 @@
-import { expect, describe, it, assert, afterEach, vi } from "vitest";
+import { expect, describe, it, assert } from "vitest";
 
 import type { Channel, ChannelID } from "../../core/types.mjs";
 import type { ExtractorInput } from "./index.mjs";
 
 import { ExtractorError, run } from "./index.mjs";
-
-afterEach(() => {
-  vi.resetAllMocks();
-});
 
 const TEST_CHANNEL: Channel = {
   id: "test" as ChannelID,
