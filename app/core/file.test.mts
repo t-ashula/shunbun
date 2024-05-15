@@ -6,7 +6,6 @@ import { listDirs, listFiles } from "./file.mjs";
 vi.mock("node:fs/promises", async (_importOriginal) => {
   return {
     default: {
-       
       // ...(await importOriginal<typeof import("node:fs/promises")>()),
       readdir: async (dir: string, options?: { withFileTypes?: boolean }) => {
         console.log(dir);
@@ -16,13 +15,13 @@ vi.mock("node:fs/promises", async (_importOriginal) => {
             {
               isDirectory: () => false,
               isFile: () => true,
-              path: dir,
+              path: dir, // TODO: deprecated path, -> parentPath
               name: "f1",
             },
             {
               isDirectory: () => true,
               isFile: () => false,
-              path: dir,
+              path: dir, // TODO: deprecated path, -> parentPath
               name: "d1",
             },
           ];
