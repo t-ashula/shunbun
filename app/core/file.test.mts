@@ -15,13 +15,11 @@ vi.mock("node:fs/promises", async (_importOriginal) => {
             {
               isDirectory: () => false,
               isFile: () => true,
-              path: dir, // TODO: deprecated path, -> parentPath
               name: "f1",
             },
             {
               isDirectory: () => true,
               isFile: () => false,
-              path: dir, // TODO: deprecated path, -> parentPath
               name: "d1",
             },
           ];
@@ -43,7 +41,7 @@ describe("listDirs", () => {
     const actual = await listDirs(baseDir);
     assert(actual.isSuccess() === true); // FIXME: type
     const dirs = actual.value;
-    expect(dirs).toStrictEqual(["/list/dirs/success/d1"]);
+    expect(dirs).toStrictEqual(["d1"]);
   });
   it("return Failure()", async () => {
     const baseDir = "/list/dirs/failure";
@@ -62,7 +60,7 @@ describe("listFiles", () => {
     const actual = await listFiles(baseDir);
     assert(actual.isSuccess() === true); // FIXME: type
     const dirs = actual.value;
-    expect(dirs).toStrictEqual(["/list/files/success/f1"]);
+    expect(dirs).toStrictEqual(["f1"]);
   });
   it("return Failure() when fs error", async () => {
     const baseDir = "/list/files/failure";

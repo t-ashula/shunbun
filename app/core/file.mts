@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import path from "node:path";
 import type { Result } from "../core/result.mjs";
 import { Success, Failure } from "../core/result.mjs";
 import type { Dirent } from "node:fs";
@@ -25,7 +24,7 @@ const listDirs = async (baseDir: string): Promise<Result<string[], Error>> => {
   return listEntries(
     baseDir,
     (ent) => ent.isDirectory(),
-    (ent) => path.join(ent.path, ent.name),
+    (ent) => ent.name,
   );
 };
 
@@ -33,7 +32,7 @@ const listFiles = async (baseDir: string): Promise<Result<string[], Error>> => {
   return listEntries(
     baseDir,
     (ent) => ent.isFile(),
-    (ent) => path.join(ent.path, ent.name),
+    (ent) => ent.name,
   );
 };
 
