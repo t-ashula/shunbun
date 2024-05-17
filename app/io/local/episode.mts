@@ -95,28 +95,18 @@ const fetchSavedEpisodesOf = async (
   episodes: Episode[],
   config: EpisodeSaveLocalConfig,
 ): Promise<Result<Record<ChannelID, Episode[]>, Error>> => {
-  const channelIds = episodes.map((e) => e.channelId);
-  const episodeMap: Record<ChannelID, Episode[]> = {};
-  const episodeLoading = await Promise.all(
+  const channelIds = [...new Set(episodes.map((e) => e.channelId)).values()];
+  const inChannelLoading = await Promise.all(
     channelIds.map(async (channelId) => {
-      return await load({
-        config: { baseDir: config.baseDir, channelId: channelId },
-      });
+      return { channelId, result: await loadChannelEpisode(channelId, config) };
     }),
   );
-  // TODO: Failure ?
-  //
-  episodeLoading
-    .filter((r) => r.isSuccess())
-    .map((r) => r.value.values)
-    .flat()
-    .forEach((ep) => {
-      const channelId = ep.channelId;
-      if (channelId in episodeMap) {
-        return;
-      }
-      episodeMap[channelId] ||= [];
-      episodeMap[channelId].push(ep);
+
+  const episodeMap: Record<ChannelID, Episode[]> = {};
+  inChannelLoading
+    .filter(({ result }) => result.isSuccess()) // TODO: care Failure ?
+    .forEach(({ channelId, result }) => {
+      episodeMap[channelId] = result.unwrap().values; // TODO: success なのでちょくで values 取れるはず
     });
   return new Success(episodeMap);
 };
@@ -133,6 +123,10 @@ const save = async (
   } else {
     savedEpisodes = fetching.value;
   }
+  logger.debug(
+    `savedEpisodes fetched. count(channel)=${Object.keys(savedEpisodes).length}`,
+  );
+
   const saved: Episode[] = [];
   const results: SaverResult<EpisodeSaveOutput>[] = [];
   for (const episode of episodes) {
@@ -156,7 +150,12 @@ const loadEpisode = async (
   episodeId: EpisodeID,
   config: EpisodeLocalConfig,
 ): Promise<Result<LoaderOutput<Episode>, LoaderError>> => {
+  logger.debug(
+    `loadEpisode called. channelId=${channelId} episodeId=${episodeId}`,
+  );
   const filePath = episodeFilePath(channelId, episodeId, config);
+  logger.debug(`loadEpisode try episode file. filePath=${filePath}`);
+
   try {
     const text = await fs.readFile(filePath, "utf-8");
     const data = JSON.parse(text);
@@ -178,7 +177,9 @@ const loadChannelEpisode = async (
   channelId: ChannelID,
   config: EpisodeLocalConfig,
 ): Promise<Result<LoaderOutput<Episode>, LoaderError>> => {
+  logger.debug(`loadChannelEpisode called. channelId=${channelId}`);
   const dir = channelsDir(channelId, config);
+  logger.debug(`loadChannelEpisode channelsDir=${dir}`);
   const listing = await listDirs(dir);
   if (listing.isFailure()) {
     return new Failure(listing.error);
@@ -200,7 +201,9 @@ const load = async (
   input: LoaderInput<EpisodeLoadLocalConfig>,
 ): Promise<Result<LoaderOutput<Episode>, LoaderError>> => {
   const { config } = input;
-
+  logger.debug(
+    `episode load called. baseDir=${config.baseDir} channelId=${config.channelId} episodeId=${config.episodeId}`,
+  );
   if (config.channelId !== undefined) {
     if (config.episodeId !== undefined) {
       // single

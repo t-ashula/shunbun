@@ -108,7 +108,7 @@ const loadChannel = async (
 
 const listChannelIds = async (
   config: ChannelLocalConfig,
-): Promise<Result<string[], Error>> => {
+): Promise<Result<string[], LoaderError>> => {
   // TODO: use index file
   const dir = config.baseDir;
   const listing = await listDirs(dir);
@@ -118,6 +118,7 @@ const listChannelIds = async (
       new LoaderError("read dir failed", { cause: listing.error }),
     );
   }
+
   return listing;
 };
 
@@ -125,6 +126,7 @@ const load = async (
   input: LoaderInput<ChannelLoadLocalConfig>,
 ): Promise<Result<LoaderOutput<Channel>, LoaderError>> => {
   const { config } = input;
+  logger.debug(`load channel called. config=${JSON.stringify(config)}`);
   if (config.channelId !== undefined) {
     return loadChannel(config.channelId, config);
   }
