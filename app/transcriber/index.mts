@@ -78,6 +78,9 @@ const splitMediaFile = async (
   mediaFilePath: string,
   config: { splitSecond: number; workDir: string },
 ): Promise<Result<string[], Error>> => {
+  logger.debug(
+    `splitMediaFile. path=${mediaFilePath} second=${config.splitSecond} workDir=${config.workDir}`,
+  );
   const ext: string = await getExtension(mediaFilePath);
   try {
     await fs.mkdir(config.workDir);
@@ -89,12 +92,12 @@ const splitMediaFile = async (
           reject(err);
         })
         .on("end", () => {
-          logger.info(`ffmpeg split done.`);
+          logger.info(`ffmpeg split done. mediaFilePath=${mediaFilePath}`);
           resolve();
         })
         .on("stderr", (line) => logger.info(`ffmpeg stderr: ${line}`))
         .on("stdout", (line) => logger.info(`ffmpeg stdout: ${line}`))
-        .addOptions([`-loglevel info`])
+        .addOptions([`-loglevel error`])
         .outputOptions([
           `-c copy`,
           `-f segment`,
@@ -109,7 +112,9 @@ const splitMediaFile = async (
     if (listing.isFailure()) {
       return new Failure(listing.error);
     }
-    const splitted = listing.value;
+    const splitted = listing.value.map((fileName) =>
+      path.join(config.workDir, fileName),
+    );
     return new Success(splitted); // how to get splitted files name
   } catch (err) {
     return new Failure(new Error("split media failed", { cause: err }));
@@ -141,9 +146,16 @@ const fetchTranscribeAPI = async (
   }
 
   const response = downloading.value.response;
+  logger.info(
+    `fetchTranscribeAPI. post to api done. status=${response.status} mediaFilePath=${mediaFilePath}`,
+  );
   const parsing = await tryParseAPIResponse(response);
   if (parsing.isFailure()) {
-    return new Failure(parsing.error);
+    return new Failure(
+      new TranscriberError("transcriber api response is unknown", {
+        cause: parsing.error,
+      }),
+    );
   }
 
   const apiResponse = parsing.value;
