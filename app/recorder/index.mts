@@ -10,9 +10,11 @@ import { getLogger } from "../core/logger.mjs";
 import type { DownloaderInput } from "../downloader/index.mjs";
 import { run as download } from "../downloader/index.mjs";
 import { NotImplementedError } from "../core/errors.mjs";
+import { listFiles } from "../core/file.mjs";
 
 type StoreConfig = {
   baseDir: string;
+  update?: boolean; //
 };
 
 type RecorderInput = {
@@ -50,6 +52,39 @@ const staticRecording = async (
   input: RecorderInput,
 ): Promise<Result<RecorderOutput, RecorderError>> => {
   const { episode, storeConfig } = input;
+  const mediaDir = path.join(
+    storeConfig.baseDir,
+    episode.channelId,
+    episode.id,
+    MEDIA_DIR,
+  );
+
+  if (!storeConfig.update) {
+    try {
+      const stats = await fs.stat(mediaDir);
+      if (stats.isDirectory()) {
+        const loading = await listFiles(mediaDir);
+        if (loading.isFailure()) {
+          // pass
+        } else {
+          const files = loading.value;
+          const storedEpisode: StoredEpisode = {
+            episodeId: episode.id,
+            stored: files.map((f) => ({
+              storageType: "local", // TODO: いる？
+              storedAt: new Date(), // TODO: use file ctime
+              storedKey: path.join(mediaDir, f),
+            })),
+          };
+
+          const output: RecorderOutput = { storedEpisode };
+          return new Success(output);
+        }
+      }
+    } catch (err) {
+      // pass
+    }
+  }
 
   const di: DownloaderInput = {
     requestUrl: episode.streamURL,
@@ -73,12 +108,6 @@ const staticRecording = async (
   const buffer = await response.arrayBuffer();
   const mediaType = await guessMediaType(contentType, buffer);
   try {
-    const mediaDir = path.join(
-      storeConfig.baseDir,
-      episode.channelId,
-      episode.id,
-      MEDIA_DIR,
-    );
     await fs.mkdir(mediaDir, { recursive: true });
 
     const mediaFilePath = path.join(
@@ -101,6 +130,11 @@ const staticRecording = async (
     const output: RecorderOutput = { storedEpisode };
     return new Success(output);
   } catch (err) {
+    try {
+      await fs.rm(mediaDir, { recursive: true, force: true });
+    } catch (err2) {
+      // pass
+    }
     // TODO: rollback media files
     return new Failure(new RecorderError("record failed.", { cause: err }));
   }
