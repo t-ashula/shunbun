@@ -53,7 +53,12 @@ type StoredEpisode = {
 };
 
 const isStoredEpisode = (obj: any): obj is StoredEpisode => {
-  return hasKeys(obj, ["episode", "stored"]) && isEpisode(obj["episode"]);
+  // at least 1 stored info
+  return (
+    hasKeys(obj, ["episodeId", "stored"]) &&
+    Array.isArray(obj["stored"]) &&
+    hasKeys(obj["stored"][0], ["storageType", "storedKey", "storedAt"])
+  );
 };
 
 type TranscriberAPIResponse = {

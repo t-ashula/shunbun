@@ -62,8 +62,11 @@ def transcribe():
         return bad_req("no media file")
 
     lang = request.form.get("lang", "ja")
-
+    _dir, ext = os.path.splitext(media.filename)
+    if ext == "" or ext[0] != ".":
+        ext = ".mp3"  # ok?
     filename = os.path.join(app.config["UPLOAD_DIR"], str(uuid.uuid4()))
+    filename += ext
     media.save(filename)
     pipe = app.config["KOTOBA_PIPELINE"]
     generate_kwargs = {"language": "japanese", "task": "transcribe"}  # TODO: language

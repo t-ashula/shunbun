@@ -1,7 +1,8 @@
 import os from "node:os";
 import path from "node:path";
 import fs from "node:fs/promises";
-import { fileTypeFromFile } from "file-type";
+import { randomUUID } from "node:crypto";
+
 import ffmpeg from "fluent-ffmpeg";
 import { getLogger } from "../core/logger.mjs";
 import { Failure, Success, type Result } from "../core/result.mjs";
@@ -12,10 +13,9 @@ import type {
   EpisodeTranscript,
 } from "../core/types.mjs";
 import { isTranscriberAPIResponse } from "../core/types.mjs";
+import { listFiles } from "../core/file.mjs";
 import { run as download, stringify } from "../downloader/index.mjs";
 import type { DownloaderInput } from "../downloader/index.mjs";
-import { listFiles } from "../core/file.mjs";
-import { randomUUID } from "node:crypto";
 
 type TranscriberConfig = {
   apiEndpoint: string;
@@ -61,15 +61,16 @@ const tryParseAPIResponse = async (
   }
 };
 
-const getExtension = async (mediaFilePath: string): Promise<string> => {
-  const extByPath = path.extname(mediaFilePath);
-  if (extByPath !== "") {
-    return extByPath.replace(/^\./, "");
-  }
-  const extByFile = await fileTypeFromFile(mediaFilePath);
-  if (extByFile && extByFile.ext) {
-    return extByFile.ext;
-  }
+// split すると mp3 のデコードがおかしくなるので wav 固定
+const getExtension = async (_mediaFilePath: string): Promise<string> => {
+  // const extByPath = path.extname(mediaFilePath);
+  // if (extByPath !== "") {
+  //   return extByPath.replace(/^\./, "");
+  // }
+  // const extByFile = await fileTypeFromFile(mediaFilePath);
+  // if (extByFile && extByFile.ext) {
+  //   return extByFile.ext;
+  // }
 
   return "wav"; // default fallback is wave
 };
@@ -83,7 +84,7 @@ const splitMediaFile = async (
   );
   const ext: string = await getExtension(mediaFilePath);
   try {
-    await fs.mkdir(config.workDir);
+    await fs.mkdir(config.workDir, { recursive: true });
     await new Promise<void>((resolve, reject) => {
       //     ffmpeg -i "$input_file" -f segment -segment_time "$segment_time" -c copy -reset_timestamps 1 "${output_prefix}_$4%03d.m4a"
       ffmpeg(mediaFilePath)
@@ -99,7 +100,7 @@ const splitMediaFile = async (
         .on("stdout", (line) => logger.info(`ffmpeg stdout: ${line}`))
         .addOptions([`-loglevel error`])
         .outputOptions([
-          `-c copy`,
+          `-vcodec wav`,
           `-f segment`,
           `-segment_time ${config.splitSecond}`,
           `-reset_timestamps 1`,
@@ -171,7 +172,7 @@ const transcribeFile = async (
   mediaFilePath: string,
   config: { apiEndpoint: string },
 ): Promise<Result<Transcript, Error>> => {
-  const workDir = path.resolve(path.join(os.tmpdir(), randomUUID()));
+  const workDir = path.resolve(path.join(os.tmpdir(), "shunbun", randomUUID()));
   const splitting = await splitMediaFile(mediaFilePath, {
     splitSecond: SPLIT_SECONDS,
     workDir,
