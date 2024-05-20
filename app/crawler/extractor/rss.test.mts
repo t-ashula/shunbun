@@ -134,4 +134,13 @@ describe("canHandle", () => {
     const result = await canHandle(input);
     expect(result).toBe(true);
   });
+  it("return true when content is rss", async () => {
+    const input = {
+      meta: { contentType: "application/xml" },
+      channel: TEST_CHANNEL,
+      content: TEST_RSS,
+    };
+    const result = await canHandle(input);
+    expect(result).toBe(true);
+  });
 });
