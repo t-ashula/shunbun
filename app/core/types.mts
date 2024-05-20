@@ -86,10 +86,13 @@ type Transcript = {
   lang: string;
   segments: TranscriptSegment[];
 };
+type TranscriptID = Brand<string, "TranscriptID">;
 
 type EpisodeTranscript = {
+  id: TranscriptID;
   episodeId: EpisodeID;
   transcripts: Transcript[];
+  transcribedAt: Date;
 };
 
 const isTranscript = (obj: any): obj is Transcript => {
@@ -107,6 +110,7 @@ export type {
   StreamingType,
   StoredEpisode,
   StorageType,
+  TranscriptID,
   TranscriberAPIResponse,
   TranscriptSegment,
   Transcript,

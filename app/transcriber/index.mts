@@ -2,8 +2,9 @@ import os from "node:os";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-
+import { ulid } from "ulid";
 import ffmpeg from "fluent-ffmpeg";
+
 import { getLogger } from "../core/logger.mjs";
 import { Failure, Success, type Result } from "../core/result.mjs";
 import type {
@@ -11,6 +12,7 @@ import type {
   TranscriberAPIResponse,
   Transcript,
   EpisodeTranscript,
+  TranscriptID,
 } from "../core/types.mjs";
 import { isTranscriberAPIResponse } from "../core/types.mjs";
 import { listFiles } from "../core/file.mjs";
@@ -234,8 +236,10 @@ const run = async (
   }
   const output = {
     episodeTranscript: {
+      id: ulid() as TranscriptID,
       episodeId: storedEpisode.episodeId,
       transcripts,
+      transcribedAt: new Date(),
     },
   };
   return new Success(output);
