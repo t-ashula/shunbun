@@ -22,7 +22,7 @@ const isTranscriberInput = (obj: any): obj is TranscriberInput => {
 };
 
 const loadInput = async (
-  filePath: string
+  filePath: string,
 ): Promise<Result<StoredEpisode | TranscriberInput, Error>> => {
   try {
     const text = await fs.readFile(filePath, "utf-8");
@@ -35,11 +35,11 @@ const loadInput = async (
       return new Success(data);
     }
     return new Failure(
-      new Error(`unknown input file found. path=${filePath} `)
+      new Error(`unknown input file found. path=${filePath} `),
     );
   } catch (err) {
     return new Failure(
-      new Error(`load input failed. path=${filePath}`, { cause: err })
+      new Error(`load input failed. path=${filePath}`, { cause: err }),
     );
   }
 };
@@ -90,7 +90,7 @@ const loadInput = async (
 
   const output = (await transcribe(input)).unwrap();
   logger.info(
-    `transcribe done. text=${output.episodeTranscript.transcripts[0].text}`
+    `transcribe done. text=${output.episodeTranscript.transcripts[0].text}`,
   );
   const saved = (
     await saveTranscript({

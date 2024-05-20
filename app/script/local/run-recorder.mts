@@ -18,7 +18,7 @@ const isRecorder = (obj: any): obj is RecorderInput => {
 };
 
 const loadInput = async (
-  filePath: string
+  filePath: string,
 ): Promise<Result<Episode | RecorderInput, Error>> => {
   try {
     const text = await fs.readFile(filePath, "utf-8");
@@ -31,11 +31,11 @@ const loadInput = async (
       return new Success(data);
     }
     return new Failure(
-      new Error(`unknown input file found. path=${filePath} `)
+      new Error(`unknown input file found. path=${filePath} `),
     );
   } catch (err) {
     return new Failure(
-      new Error(`load input failed. path=${filePath}`, { cause: err })
+      new Error(`load input failed. path=${filePath}`, { cause: err }),
     );
   }
 };
@@ -86,7 +86,7 @@ const loadInput = async (
 
   const output = (await record(input)).unwrap();
   console.log(
-    `record done. media path=${output.storedEpisode.stored[0].storedKey}`
+    `record done. media path=${output.storedEpisode.stored[0].storedKey}`,
   );
   const saved = (
     await saveStored({

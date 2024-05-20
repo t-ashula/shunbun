@@ -1,9 +1,12 @@
 import Parser from "rss-parser";
 import { ulid } from "ulid";
 import mime from "mime";
-import { type Result, Success, Failure } from "../../core/result.mjs";
+import xml2js from "xml2js";
+import type { Result } from "../../core/result.mjs";
+import { Success, Failure } from "../../core/result.mjs";
 import type { Episode, EpisodeID } from "../../core/types.mjs";
 import { tryParseDate, tryParseDuration } from "../../core/datetime.mjs";
+import { getLogger } from "../../core/logger.mjs";
 import type {
   ExtractorInput,
   ExtractorOutput,
@@ -11,8 +14,10 @@ import type {
 } from "./index.mjs";
 import { ExtractorError } from "./index.mjs";
 
+const logger = getLogger();
+
 const run: ExtractFunction = async (
-  input: ExtractorInput,
+  input: ExtractorInput
 ): Promise<Result<ExtractorOutput, ExtractorError>> => {
   const parser = new Parser();
   const { channel, content } = input;
@@ -42,10 +47,26 @@ const run: ExtractFunction = async (
 };
 
 const canHandle = async (input: ExtractorInput): Promise<boolean> => {
-  const { meta } = input;
+  const { meta, content } = input;
   if (meta && meta.contentType) {
     const ext = mime.getExtension(meta.contentType);
-    return ext === "rss";
+    if (ext === "rss") {
+      return true;
+    }
+  }
+  if (content) {
+    try {
+      // FIXME: should i use rss-parser?
+      const parsed = await xml2js.parseStringPromise(content, {
+        explicitArray: false,
+      });
+      if (parsed.rss && parsed.rss.channel && parsed.rss.channel.item) {
+        return true;
+      }
+    } catch (err) {
+      // pass
+      logger.info(`rss.canHandler parse xml failed. error=${err}`);
+    }
   }
   return false;
 };

@@ -25,7 +25,7 @@ const logger = getLogger();
 
 const crawlToTranscript = async (
   channel: Channel,
-  baseDir: string
+  baseDir: string,
 ): Promise<EpisodeTranscript[]> => {
   // crawl and save new episode
   const crawledEpisodes = (await crawl({ channel })).unwrap().episodes;
@@ -50,18 +50,18 @@ const crawlToTranscript = async (
           episodeId: episode.id,
           result: await record({ episode, storeConfig: { baseDir } }),
         };
-      })
+      }),
     );
     const recordedEpisodes = recordings
       .map(({ episodeId, result }) => {
         if (result.isFailure()) {
           logger.warn(
-            `recording failed. channelId=${channel.id} episodeId=${episodeId}`
+            `recording failed. channelId=${channel.id} episodeId=${episodeId}`,
           );
           return [];
         }
         logger.info(
-          `recording success. channelId=${channel.id} episodeId=${episodeId}`
+          `recording success. channelId=${channel.id} episodeId=${episodeId}`,
         );
         return result.value.storedEpisode;
       })
@@ -79,7 +79,7 @@ const crawlToTranscript = async (
       });
       if (checking.isSuccess()) {
         logger.info(
-          `episode has transcript. channel=${channel.id} episode=${recorded.episodeId}`
+          `episode has transcript. channel=${channel.id} episode=${recorded.episodeId}`,
         );
         continue;
       }
@@ -89,11 +89,11 @@ const crawlToTranscript = async (
       });
       if (transcribing.isFailure()) {
         logger.warn(
-          `transcribe failed. channel=${channel.id} episode=${recorded.episodeId}`
+          `transcribe failed. channel=${channel.id} episode=${recorded.episodeId}`,
         );
       } else {
         logger.info(
-          `transcribe success. channel=${channel.id} episode=${recorded.episodeId}`
+          `transcribe success. channel=${channel.id} episode=${recorded.episodeId}`,
         );
         const episodeTranscript = transcribing.value.episodeTranscript;
         episodeTranscripts.push(episodeTranscript);
@@ -128,7 +128,7 @@ const crawlToTranscript = async (
   logger.debug(`load channels done. count=${allChannels.length}`);
   for (const channels of eachSlice(allChannels, PARALLEL)) {
     const results = await Promise.all(
-      channels.map(async (channel) => crawlToTranscript(channel, baseDir))
+      channels.map(async (channel) => crawlToTranscript(channel, baseDir)),
     );
     console.log(results);
   }

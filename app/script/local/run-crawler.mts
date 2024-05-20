@@ -19,7 +19,7 @@ import { save as saveEpisodes } from "../../io/local/episode.mjs";
 const logger = getLogger();
 
 const loadCrawlerInput = async (
-  filePath: string
+  filePath: string,
 ): Promise<Result<CrawlerInput, Error>> => {
   try {
     const d = await fs.readFile(filePath, "utf-8");
@@ -34,8 +34,8 @@ const loadCrawlerInput = async (
     }
     return new Failure(
       new Error(
-        `unknown format json. path=${filePath} data=${JSON.stringify(data)}`
-      )
+        `unknown format json. path=${filePath} data=${JSON.stringify(data)}`,
+      ),
     );
   } catch (err) {
     return new Failure(new Error(`load data error`, { cause: err }));
@@ -51,7 +51,7 @@ const isENOENT = (err: unknown): boolean => {
 
 const findOrCreateByCrawlURL = async (
   crawlURL: string,
-  baseDir: string
+  baseDir: string,
 ): Promise<Result<Channel, Error>> => {
   const loading = await loadChannels({ config: { baseDir } });
   if (loading.isSuccess()) {
@@ -69,7 +69,7 @@ const findOrCreateByCrawlURL = async (
       logger.warn(`no data dir. dir=${baseDir}`);
     } else {
       return new Failure(
-        new Error("find channel failed", { cause: loading.error })
+        new Error("find channel failed", { cause: loading.error }),
       );
     }
   }
