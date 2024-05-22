@@ -17,7 +17,7 @@ import { ExtractorError } from "./index.mjs";
 const logger = getLogger();
 
 const run: ExtractFunction = async (
-  input: ExtractorInput
+  input: ExtractorInput,
 ): Promise<Result<ExtractorOutput, ExtractorError>> => {
   const parser = new Parser();
   const { channel, content } = input;

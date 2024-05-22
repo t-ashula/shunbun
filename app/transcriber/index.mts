@@ -188,12 +188,15 @@ const transcribeFile = async (
   const splitted = splitting.value;
   for (const partFilePath of splitted) {
     const fetching = await fetchTranscribeAPI(partFilePath, config);
+    await fs.unlink(partFilePath);
     if (fetching.isFailure()) {
+      await fs.rm(workDir, { recursive: true, force: true });
       return fetching;
     }
     scripts.push(fetching.value);
   }
 
+  await fs.rm(workDir, { recursive: true, force: true });
   // SPLIT_SECONDS で区切ったファイルの連結なのでタイムスタンプを累積させる
   const merged = scripts.reduce(
     (acc, curr, index) => {
