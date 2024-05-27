@@ -13,7 +13,7 @@ services:
         soft: 65536
         hard: 65536
     volumes:
-      - opensearch-data1:${PWD}/share/opensearch/data
+      - opensearch-data1:/usr/share/opensearch/data
     ports:
       - 9200:9200
       - 9600:9600
