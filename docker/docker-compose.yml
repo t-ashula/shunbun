@@ -13,12 +13,13 @@ services:
         soft: 65536
         hard: 65536
     volumes:
-      - opensearch-data1:/usr/share/opensearch/data
+      - shunbun-opensearch:/usr/share/opensearch/data
+      # TODO: logs
     ports:
       - 9200:9200
       - 9600:9600
     networks:
-      - opensearch-net
+      - shunbun-app
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:latest
     container_name: opensearch-dashboards
@@ -29,10 +30,24 @@ services:
     environment:
       OPENSEARCH_HOSTS: '["https://opensearch-node1:9200"]'
     networks:
-      - opensearch-net
-
+      - shunbun-app
+  mysql:
+    image: mysql:8
+    container_name: mysql-server
+    ports:
+      - 3306:3306
+    expose:
+      - "3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - shunbun-mysql:/var/lib/mysql
+      - ./logs/mysql:/var/log/mysql
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./initdb.d/:/docker-entrypoint-initdb.d/
 volumes:
-  opensearch-data1:
+  shunbun-mysql:
+  shunbun-opensearch:
 
 networks:
-  opensearch-net:
+  shunbun-app:
