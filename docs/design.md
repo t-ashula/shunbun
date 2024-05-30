@@ -32,7 +32,7 @@
 
 object:
 
-- id: uuid(string)
+- channelId: uuid(string)
   - id
 - name: string
   - name
