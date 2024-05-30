@@ -129,7 +129,15 @@ const crawlToTranscript = async (
   logger.debug(`load channels done. count=${allChannels.length}`);
   for (const channels of eachSlice(allChannels, PARALLEL)) {
     const results = await Promise.all(
-      channels.map(async (channel) => crawlToTranscript(channel, baseDir)),
+      channels.map(async (channel) => {
+        try {
+          crawlToTranscript(channel, baseDir);
+        } catch (err) {
+          logger.error(
+            `channel processing failed. channelId=${channel.channelId} error=${err}`,
+          );
+        }
+      }),
     );
     console.log(results);
   }
