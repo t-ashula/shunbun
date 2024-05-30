@@ -45,6 +45,12 @@ const run = async (
       contentType: downloaded.response.headers.get("content-type") || "",
     },
   };
+  if (downloaded.response.status !== 200) {
+    logger.warn(
+      `response status is not good. status=${downloaded.response.status} crawl url=${channel.crawlURL}`,
+    );
+    return new Failure(new CrawlerError(`crawl url status code is not good.`));
+  }
   const extracting = await extractEpisodes(ei);
 
   if (extracting.isFailure()) {
