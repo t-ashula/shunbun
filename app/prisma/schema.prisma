@@ -19,19 +19,22 @@ model Channel {
   id BigInt @id @default(autoincrement())
 
   // exposed key, ulid
-  channelId String   @unique @map("channel_id") @db.VarChar(26)
-  name      String   @default("") @db.VarChar(500)
-  crawlURL  String   @map("crawl_url") @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  channelId       String        @unique @map("channel_id") @db.VarChar(26)
+  name            String        @default("") @db.VarChar(500)
+  crawlURL        String        @map("crawl_url") @db.Text
+  status          ChannelStatus @relation(fields: [channelStatusId], references: [id])
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  channelStatusId Int           @map("channel_status_id")
 
   @@map("channels")
 }
 
 model ChannelStatus {
-  id          Int    @id
-  name        String @unique @db.VarChar(32)
-  description String @db.Text
+  id          Int       @id
+  name        String    @unique @db.VarChar(32)
+  description String    @db.Text
+  Channel     Channel[]
 
   @@map("channel_statuses")
 }
