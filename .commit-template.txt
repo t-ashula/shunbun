@@ -13,6 +13,7 @@
 # 👮  :cop: セキュリティ関連の改善
 # 📕  :books: ドキュメント関連の改善
 # 🏭️ :factory: CI など環境の構築
+# 💔 :broken_heart: 破壊的な変更
 
 # ==== Format ====
 # :emoji: Subject

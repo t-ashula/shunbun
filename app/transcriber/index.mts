@@ -239,7 +239,7 @@ const run = async (
   }
   const output = {
     episodeTranscript: {
-      id: ulid() as TranscriptID,
+      transcriptId: ulid() as TranscriptID,
       episodeId: storedEpisode.episodeId,
       transcripts,
       transcribedAt: new Date(),

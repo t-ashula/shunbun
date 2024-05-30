@@ -179,7 +179,7 @@ const load = async (
   const { values: channels } = channelLoading.value;
   const results = await Promise.all(
     channels.map(async (ch) => {
-      return loadChannelStoredEpisode(ch.id, config);
+      return loadChannelStoredEpisode(ch.channelId, config);
     }),
   );
   const stored = results

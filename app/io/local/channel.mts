@@ -46,7 +46,8 @@ const saveChannel = async (
   config: ChannelSaveLocalConfig,
 ): Promise<SaverResult<ChannelSaveOutput>> => {
   try {
-    const filePath = channelFilePath(channel.id, config);
+    const { channelId } = channel;
+    const filePath = channelFilePath(channelId, config);
 
     if (!config.update) {
       try {
@@ -55,7 +56,7 @@ const saveChannel = async (
       } catch (err) {
         // nothing.
         // TODO: check file exists
-        logger.info(`save channel skipped. id=${channel.id}`);
+        logger.info(`save channel skipped. channelId=${channelId}`);
       }
     }
     await fs.mkdir(path.dirname(filePath), { recursive: true });

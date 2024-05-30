@@ -5,14 +5,12 @@ import { hideBin } from "yargs/helpers";
 import type { Result } from "../../core/result.mjs";
 import { Failure, Success } from "../../core/result.mjs";
 import type { Episode } from "../../core/types.mjs";
+import { isEpisode } from "../../core/types.mjs";
 import type { RecorderInput } from "../../recorder/index.mjs";
 import { run as record } from "../../recorder/index.mjs";
 import { save as saveStored } from "../../io/local/stored.mjs";
 import path from "node:path";
 
-const isEpisode = (obj: any): obj is Episode => {
-  return "id" in obj && "channelId" in obj;
-};
 const isRecorder = (obj: any): obj is RecorderInput => {
   return "episode" in obj;
 };

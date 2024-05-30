@@ -183,7 +183,7 @@ const load = async (
   const { values: channels } = channelLoading.value;
   const results = await Promise.all(
     channels.map(async (ch) => {
-      return loadChannelTranscripts(ch.id, config);
+      return loadChannelTranscripts(ch.channelId, config);
     }),
   );
   const transcripts = results

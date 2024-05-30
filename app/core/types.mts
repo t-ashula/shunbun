@@ -4,7 +4,7 @@ type StreamingType = "static" | "stream" | "live";
 
 type ChannelID = Brand<string, "ChannelID">;
 type Channel = {
-  id: ChannelID;
+  channelId: ChannelID;
   name: string;
   crawlURL: string;
   mediaURL: string;
@@ -17,12 +17,12 @@ const hasKeys = (obj: any, keys: string[]): boolean => {
   return false;
 };
 const isChannel = (obj: any): obj is Channel => {
-  return hasKeys(obj, ["id", "name", "crawlURL", "mediaURL"]);
+  return hasKeys(obj, ["channelId", "name", "crawlURL", "mediaURL"]);
 };
 
 type EpisodeID = Brand<string, "EpisodeID">;
 type Episode = {
-  id: EpisodeID; // we generated
+  episodeId: EpisodeID; // we generated
   theirId: string; // guid
   title: string;
   description: string;
@@ -36,7 +36,7 @@ type Episode = {
   channelId: ChannelID;
 };
 const isEpisode = (obj: any): obj is Episode => {
-  return hasKeys(obj, ["id", "channelId"]);
+  return hasKeys(obj, ["episodeId", "channelId"]);
 };
 
 type StorageType = "local";
@@ -89,7 +89,7 @@ type Transcript = {
 type TranscriptID = Brand<string, "TranscriptID">;
 
 type EpisodeTranscript = {
-  id: TranscriptID;
+  transcriptId: TranscriptID;
   episodeId: EpisodeID;
   transcripts: Transcript[];
   transcribedAt: Date;

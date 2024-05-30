@@ -74,7 +74,7 @@ const findOrCreateByCrawlURL = async (
     }
   }
   const channel: Channel = {
-    id: ulid() as ChannelID,
+    channelId: ulid() as ChannelID,
     crawlURL: crawlURL,
     mediaURL: crawlURL, // TODO:
     name: crawlURL, // TODO

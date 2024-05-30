@@ -25,14 +25,14 @@ const run: ExtractFunction = async (
     const feed = await parser.parseString(content);
 
     const episodes: Episode[] = feed.items.map((item) => ({
-      id: ulid() as EpisodeID,
+      episodeId: ulid() as EpisodeID,
       theirId: item.guid || "",
       title: item.title || "",
       publishedAt: tryParseDate(item.pubDate) || new Date(), // now ?
       description: item.itunes?.summary || item.content || "",
       streaming: "static",
       streamURL: item.enclosure?.url || "",
-      channelId: channel.id,
+      channelId: channel.channelId,
       duration: tryParseDuration(item.itunes?.duration),
       expectedContentType: item.enclosure?.type,
     }));

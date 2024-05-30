@@ -41,7 +41,7 @@ afterEach(() => {
 afterAll(() => {});
 
 const TEST_CHANNEL: Channel = {
-  id: "test" as ChannelID,
+  channelId: "test" as ChannelID,
   name: "test channel",
   crawlURL: "https://channel.test/feed",
   mediaURL: "https://channle.test/media",

@@ -34,10 +34,11 @@ const crawlToTranscript = async (
     config: { baseDir },
   });
 
+  const { channelId } = channel;
   // reload all episodes
   const allEpisodes = (
     await loadEpisodes({
-      config: { channelId: channel.id, baseDir },
+      config: { channelId, baseDir },
     })
   ).unwrap().values;
 
@@ -47,7 +48,7 @@ const crawlToTranscript = async (
     const recordings = await Promise.all(
       episodes.map(async (episode) => {
         return {
-          episodeId: episode.id,
+          episodeId: episode.episodeId,
           result: await record({ episode, storeConfig: { baseDir } }),
         };
       }),
@@ -56,12 +57,12 @@ const crawlToTranscript = async (
       .map(({ episodeId, result }) => {
         if (result.isFailure()) {
           logger.warn(
-            `recording failed. channelId=${channel.id} episodeId=${episodeId}`,
+            `recording failed. channelId=${channelId} episodeId=${episodeId}`,
           );
           return [];
         }
         logger.info(
-          `recording success. channelId=${channel.id} episodeId=${episodeId}`,
+          `recording success. channelId=${channelId} episodeId=${episodeId}`,
         );
         return result.value.storedEpisode;
       })
@@ -73,13 +74,13 @@ const crawlToTranscript = async (
       const checking = await loadTranscript({
         config: {
           baseDir,
-          channelId: channel.id,
+          channelId,
           episodeId: recorded.episodeId,
         },
       });
       if (checking.isSuccess()) {
         logger.info(
-          `episode has transcript. channel=${channel.id} episode=${recorded.episodeId}`,
+          `episode has transcript. channel=${channelId} episode=${recorded.episodeId}`,
         );
         continue;
       }
@@ -89,11 +90,11 @@ const crawlToTranscript = async (
       });
       if (transcribing.isFailure()) {
         logger.warn(
-          `transcribe failed. channel=${channel.id} episode=${recorded.episodeId}`,
+          `transcribe failed. channel=${channelId} episode=${recorded.episodeId}`,
         );
       } else {
         logger.info(
-          `transcribe success. channel=${channel.id} episode=${recorded.episodeId}`,
+          `transcribe success. channel=${channelId} episode=${recorded.episodeId}`,
         );
         const episodeTranscript = transcribing.value.episodeTranscript;
         episodeTranscripts.push(episodeTranscript);

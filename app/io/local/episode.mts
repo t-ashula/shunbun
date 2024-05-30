@@ -79,7 +79,11 @@ const saveEpisode = async (
   config: EpisodeSaveLocalConfig,
 ): Promise<SaverResult<EpisodeSaveOutput>> => {
   try {
-    const filePath = episodeFilePath(episode.channelId, episode.id, config);
+    const filePath = episodeFilePath(
+      episode.channelId,
+      episode.episodeId,
+      config,
+    );
     await fs.mkdir(path.dirname(filePath), { recursive: true });
     await fs.writeFile(filePath, JSON.stringify(episode, null, 2));
     return new Success({});
@@ -226,7 +230,7 @@ const load = async (
   const { values: channels } = channelLoading.value;
   const results = await Promise.all(
     channels.map(async (ch) => {
-      return loadChannelEpisode(ch.id, config);
+      return loadChannelEpisode(ch.channelId, config);
     }),
   );
   const episodes = results
@@ -235,7 +239,7 @@ const load = async (
     .flat()
     .filter((ep) => ep !== undefined);
   if (config.episodeId !== undefined) {
-    const episode = episodes.find((ep) => ep.id === config.episodeId);
+    const episode = episodes.find((ep) => ep.episodeId === config.episodeId);
     if (episode !== undefined) {
       return new Success({ values: [episode] });
     }
