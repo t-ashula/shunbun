@@ -38,5 +38,8 @@
     "ulid": "^2.3.0",
     "winston": "^3.13.0",
     "xml2js": "^0.6.2"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.mts"
   }
 }
