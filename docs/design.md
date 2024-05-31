@@ -23,6 +23,7 @@
 - isFailure のチェック・早期リターンも極力減らす
 - log もっといれる
   - 一方で，result の合成も進めて Failure ごとにログださないようになんとかする
+-
 
 ## Types
 
@@ -214,3 +215,5 @@ transcribe output -> transcript
 - channelId がなければ baseDir に対して dir(channelDirs) を列挙
 - 各 channelDir に対して dir (episodeDirs) を列挙
 - 各 episodeDir に対して episode.json がアレば読み込む
+
+## ディレクトリ構成とか
