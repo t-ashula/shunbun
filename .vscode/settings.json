@@ -1,5 +1,5 @@
 {
-  "cSpell.words": ["datetime", "jsonify", "loglevel"],
+  "cSpell.words": ["datetime", "htmx", "jsonify", "loglevel"],
   "eslint.workingDirectories": ["./app/"],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "prettier.trailingComma": "all"
