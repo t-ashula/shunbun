@@ -4,9 +4,9 @@ import fs from "fs/promises";
 import type { Result } from "../../core/result.mjs";
 import { Failure, Success } from "../../core/result.mjs";
 import type {
-  EpisodeID,
+  EpisodeSlug,
   EpisodeTranscript,
-  ChannelID,
+  ChannelSlug,
 } from "../../core/types.mjs";
 import { isEpisodeTranscript } from "../../core/types.mjs";
 
@@ -24,8 +24,8 @@ import { load as loadEpisodes } from "../../io/local/episode.mjs";
 import { listDirs } from "../../core/file.mjs";
 
 type TranscriptLoadConfig = {
-  channelId?: ChannelID;
-  episodeId?: EpisodeID;
+  channelSlug?: ChannelSlug;
+  episodeSlug?: EpisodeSlug;
 };
 
 type TranscriptSaveConfig = {
@@ -48,39 +48,42 @@ const TRANSCRIPT_FILE = "transcript.json";
 const logger = getLogger();
 
 const channelsDir = (
-  channelId: ChannelID,
+  channelSlug: ChannelSlug,
   config: TranscriptLocalConfig,
 ): string => {
-  return path.join(config.baseDir, channelId);
+  return path.join(config.baseDir, channelSlug);
 };
 const episodeDir = (
-  channelId: ChannelID,
-  episodeId: EpisodeID,
+  channelSlug: ChannelSlug,
+  episodeSlug: EpisodeSlug,
   config: TranscriptLocalConfig,
 ): string => {
-  return path.join(config.baseDir, channelId, episodeId);
+  return path.join(config.baseDir, channelSlug, episodeSlug);
 };
 const transcriptFilePath = (
-  channelId: ChannelID,
-  episodeId: EpisodeID,
+  channelSlug: ChannelSlug,
+  episodeSlug: EpisodeSlug,
   config: TranscriptLocalConfig,
 ): string => {
-  return path.join(episodeDir(channelId, episodeId, config), TRANSCRIPT_FILE);
+  return path.join(
+    episodeDir(channelSlug, episodeSlug, config),
+    TRANSCRIPT_FILE,
+  );
 };
 
 const saveTranscript = async (
   epTranscript: EpisodeTranscript,
   config: TranscriptSaveLocalConfig,
 ): Promise<SaverResult<TranscriptSaveOutput>> => {
-  const episodeId = epTranscript.episodeId;
+  const episodeSlug = epTranscript.episodeSlug;
   const episodeFinding = await loadEpisodes({
-    config: { episodeId, baseDir: config.baseDir },
+    config: { episodeSlug, baseDir: config.baseDir },
   });
   if (episodeFinding.isFailure()) {
     return new Failure(new SaverError(`no target episode`));
   }
   const [episode] = episodeFinding.value.values;
-  const filePath = transcriptFilePath(episode.channelId, episodeId, config);
+  const filePath = transcriptFilePath(episode.channelSlug, episodeSlug, config);
   try {
     await fs.mkdir(path.dirname(filePath), { recursive: true });
     await fs.writeFile(filePath, JSON.stringify(epTranscript, null, 2));
@@ -113,11 +116,11 @@ const save = async (
 };
 
 const loadTranscript = async (
-  channelId: ChannelID,
-  episodeId: EpisodeID,
+  channelSlug: ChannelSlug,
+  episodeSlug: EpisodeSlug,
   config: TranscriptLocalConfig,
 ): Promise<Result<LoaderOutput<EpisodeTranscript>, LoaderError>> => {
-  const filePath = transcriptFilePath(channelId, episodeId, config);
+  const filePath = transcriptFilePath(channelSlug, episodeSlug, config);
   try {
     const text = await fs.readFile(filePath, "utf-8");
     const data = JSON.parse(text);
@@ -138,10 +141,10 @@ const loadTranscript = async (
 };
 
 const loadChannelTranscripts = async (
-  channelId: ChannelID,
+  channelSlug: ChannelSlug,
   config: TranscriptLocalConfig,
 ): Promise<Result<LoaderOutput<EpisodeTranscript>, LoaderError>> => {
-  const dir = channelsDir(channelId, config);
+  const dir = channelsDir(channelSlug, config);
   const listing = await listDirs(dir);
   if (listing.isFailure()) {
     return new Failure(listing.error);
@@ -149,7 +152,7 @@ const loadChannelTranscripts = async (
   const candidates = listing.value;
   const results = await Promise.all(
     candidates.map(async (ep) => {
-      return loadTranscript(channelId, ep as EpisodeID, config);
+      return loadTranscript(channelSlug, ep as EpisodeSlug, config);
     }),
   );
   const episodes = results
@@ -163,14 +166,14 @@ const load = async (
   input: LoaderInput<TranscriptLoadLocalConfig>,
 ): Promise<Result<LoaderOutput<EpisodeTranscript>, LoaderError>> => {
   const { config } = input;
-  if (config.channelId !== undefined) {
-    if (config.episodeId !== undefined) {
-      return loadTranscript(config.channelId, config.episodeId, config);
+  if (config.channelSlug !== undefined) {
+    if (config.episodeSlug !== undefined) {
+      return loadTranscript(config.channelSlug, config.episodeSlug, config);
     }
-    return loadChannelTranscripts(config.channelId, config);
+    return loadChannelTranscripts(config.channelSlug, config);
   }
 
-  // no channelId
+  // no channelSlug
   const channelLoading = await loadChannels({
     config: { baseDir: config.baseDir },
   });
@@ -183,7 +186,7 @@ const load = async (
   const { values: channels } = channelLoading.value;
   const results = await Promise.all(
     channels.map(async (ch) => {
-      return loadChannelTranscripts(ch.channelId, config);
+      return loadChannelTranscripts(ch.slug, config);
     }),
   );
   const transcripts = results
@@ -191,8 +194,10 @@ const load = async (
     .map((r) => r.value.values)
     .flat()
     .filter((ep) => ep !== undefined);
-  if (config.episodeId !== undefined) {
-    const episode = transcripts.find((ep) => ep.episodeId === config.episodeId);
+  if (config.episodeSlug !== undefined) {
+    const episode = transcripts.find(
+      (tr) => tr.episodeSlug === config.episodeSlug,
+    );
     if (episode !== undefined) {
       return new Success({ values: [episode] });
     }

@@ -4,7 +4,7 @@ import mime from "mime";
 import xml2js from "xml2js";
 import type { Result } from "../../core/result.mjs";
 import { Success, Failure } from "../../core/result.mjs";
-import type { Episode, EpisodeID } from "../../core/types.mjs";
+import type { Episode, EpisodeSlug } from "../../core/types.mjs";
 import { tryParseDate, tryParseDuration } from "../../core/datetime.mjs";
 import { getLogger } from "../../core/logger.mjs";
 import type {
@@ -25,14 +25,14 @@ const run: ExtractFunction = async (
     const feed = await parser.parseString(content);
 
     const episodes: Episode[] = feed.items.map((item) => ({
-      episodeId: ulid() as EpisodeID,
+      slug: ulid() as EpisodeSlug,
       theirId: item.guid || "",
       title: item.title || "",
       publishedAt: tryParseDate(item.pubDate) || new Date(), // now ?
       description: item.itunes?.summary || item.content || "",
       streaming: "static",
       streamURL: item.enclosure?.url || "",
-      channelId: channel.channelId,
+      channelSlug: channel.slug,
       duration: tryParseDuration(item.itunes?.duration),
       expectedContentType: item.enclosure?.type,
     }));

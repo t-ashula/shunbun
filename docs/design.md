@@ -33,8 +33,8 @@
 
 object:
 
-- channelId: uuid(string)
-  - id
+- slug: uuid(string)
+  - unique id
 - name: string
   - name
 - crawlURL: url(string)
@@ -56,8 +56,8 @@ notes
 
 チャンネルから取り出した記録する主体
 
-- id: ulid(string)
-  - crawler で取り出したときに割り当てる
+- slug ulid(string)
+  - unique id ; crawler で取り出したときに割り当てる
 - theirId
   - guid とか rss 側のデータから生成した id
 - title: string
@@ -72,7 +72,7 @@ notes
   - live broadcast end at
 - streaming: StreamingType(string)
   - クロールしてきて決めたレコーディング方法
-- channelId: uuid(string)
+- channelSlug: uuid(string)
   - channel の id
 
 ### StreamingType
@@ -128,12 +128,12 @@ episode を受け取って，recording Task にする
 recorder は自身の制御範囲内のストレージ (disk) に episode をダウンロード（レコーディング）して StoredEpisode にする
 recorder を動かす環境には十分なスペースのストレージがあることを前提とする
 
-- 実メディアファイル `${baseDir}/${channelId}/${episodeId}/media/${number}.${ext}`
+- 実メディアファイル `${baseDir}/${channelSlug}/${episodeSlug}/media/${number}.${ext}`
   - number は複数ファイルになるときの対応
 - StoredEpisode
-  - meta 情報ファイル `${baseDir}/${channelId}/${episodeId}/stored.json`
+  - meta 情報ファイル `${baseDir}/${channelSlug}/${episodeSlug}/stored.json`
     - meta = {
-      episodeId: episodeId
+      episodeSlug: episodeSlug
       stored: [{storageType, storedKey, storedAt}]
       }
 
@@ -193,11 +193,11 @@ transcribe output -> transcript
 
 - baseDir に対して，channel/episode を掘り，stored/media, script のディレクトリを掘る
 
-- channel : `${baseDir}/${channelId}/channel.json`
-- episode : `${baseDir}/${channelId}/${episodeId}/episode.json`
-- stored : `${baseDir}/${channelId}/${episodeId}/stored.json`
-  - media : `${baseDir}/${channelId}/${episodeId}/media/${number}.${ext}`
-- transcript : `${baseDir}/${channelId}/${episodeId}/transcript.json`
+- channel : `${baseDir}/${channelSlug}/channel.json`
+- episode : `${baseDir}/${channelSlug}/${episodeSlug}/episode.json`
+- stored : `${baseDir}/${channelSlug}/${episodeSlug}/stored.json`
+  - media : `${baseDir}/${channelSlug}/${episodeSlug}/media/${number}.${ext}`
+- transcript : `${baseDir}/${channelSlug}/${episodeSlug}/transcript.json`
 
 ### index
 
@@ -207,12 +207,12 @@ transcribe output -> transcript
 
 - baseDir に対して dir を列挙
 - baseDir/${dir}/channel.json がアレば読む
-- 基本的には channelId を条件にする
+- 基本的には channelSlug を条件にする
 
 ### load episodes
 
-- 基本 channelId でのフィルタリングを前提とし，
-- channelId がなければ baseDir に対して dir(channelDirs) を列挙
+- 基本 channelSlug でのフィルタリングを前提とし，
+- channelSlug がなければ baseDir に対して dir(channelDirs) を列挙
 - 各 channelDir に対して dir (episodeDirs) を列挙
 - 各 episodeDir に対して episode.json がアレば読み込む
 

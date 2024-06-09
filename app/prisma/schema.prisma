@@ -15,17 +15,17 @@ datasource db {
 }
 
 model Channel {
-  // surrogate key
+  // surrogate key; pseude id
   id BigInt @id @default(autoincrement())
 
   // exposed key, ulid
-  channelId       String        @unique @map("channel_id") @db.VarChar(26)
+  slug            String        @unique @map("slug") @db.VarChar(26)
   name            String        @default("") @db.VarChar(500)
   crawlURL        String        @map("crawl_url") @db.Text
   status          ChannelStatus @relation(fields: [channelStatusId], references: [id])
+  channelStatusId Int           @map("channel_status_id")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
-  channelStatusId Int           @map("channel_status_id")
 
   @@map("channels")
 }

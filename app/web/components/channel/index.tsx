@@ -4,7 +4,7 @@ import type { FC } from "hono/jsx";
 const ChannelBar = ({ channel }: { channel: Channel }) => (
   <div>
     <div>
-      <a href={`/channel/${channel.channelId}`}>{channel.name}</a>
+      <a href={`/channel/${channel.slug}`}>{channel.name}</a>
     </div>
   </div>
 );

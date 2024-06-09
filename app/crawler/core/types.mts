@@ -2,9 +2,9 @@ type Brand<K, T> = K & { __brand: T };
 
 type StreamingType = "static" | "stream" | "live";
 
-type ChannelID = Brand<string, "ChannelID">;
+type ChannelSlug = Brand<string, "ChannelSlug">;
 type Channel = {
-  channelId: ChannelID;
+  slug: ChannelSlug;
   name: string;
   crawlURL: string;
   mediaURL: string;
@@ -17,12 +17,12 @@ const hasKeys = (obj: any, keys: string[]): boolean => {
   return false;
 };
 const isChannel = (obj: any): obj is Channel => {
-  return hasKeys(obj, ["channelId", "name", "crawlURL", "mediaURL"]);
+  return hasKeys(obj, ["slug", "name", "crawlURL", "mediaURL"]);
 };
 
-type EpisodeID = Brand<string, "EpisodeID">;
+type EpisodeSlug = Brand<string, "EpisodeSlug">;
 type Episode = {
-  episodeId: EpisodeID; // we generated
+  slug: EpisodeSlug; // we generated
   theirId: string; // guid
   title: string;
   description: string;
@@ -33,10 +33,10 @@ type Episode = {
   duration?: number; // in second
   startAt?: Date;
   endAt?: Date;
-  channelId: ChannelID;
+  channelSlug: ChannelSlug;
 };
 const isEpisode = (obj: any): obj is Episode => {
-  return hasKeys(obj, ["episodeId", "channelId"]);
+  return hasKeys(obj, ["slug", "channelSlug"]);
 };
 
 type StorageType = "local";
@@ -48,14 +48,14 @@ type StoredEpisodeMeta = {
 };
 
 type StoredEpisode = {
-  episodeId: EpisodeID;
+  episodeSlug: EpisodeSlug;
   stored: StoredEpisodeMeta[];
 };
 
 const isStoredEpisode = (obj: any): obj is StoredEpisode => {
   // at least 1 stored info
   return (
-    hasKeys(obj, ["episodeId", "stored"]) &&
+    hasKeys(obj, ["episodeSlug", "stored"]) &&
     Array.isArray(obj["stored"]) &&
     hasKeys(obj["stored"][0], ["storageType", "storedKey", "storedAt"])
   );
@@ -86,11 +86,11 @@ type Transcript = {
   lang: string;
   segments: TranscriptSegment[];
 };
-type TranscriptID = Brand<string, "TranscriptID">;
+type TranscriptSlug = Brand<string, "TranscriptSlug">;
 
 type EpisodeTranscript = {
-  transcriptId: TranscriptID;
-  episodeId: EpisodeID;
+  slug: TranscriptSlug;
+  episodeSlug: EpisodeSlug;
   transcripts: Transcript[];
   transcribedAt: Date;
 };
@@ -104,13 +104,13 @@ const isEpisodeTranscript = (obj: any): obj is EpisodeTranscript => {
 
 export type {
   Channel,
-  ChannelID,
+  ChannelSlug,
   Episode,
-  EpisodeID,
+  EpisodeSlug,
   StreamingType,
   StoredEpisode,
   StorageType,
-  TranscriptID,
+  TranscriptSlug,
   TranscriberAPIResponse,
   TranscriptSegment,
   Transcript,

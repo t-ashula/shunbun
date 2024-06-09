@@ -12,7 +12,7 @@ import {
 
 import { HttpResponse } from "msw";
 
-import type { Channel, ChannelID, Episode } from "../core/types.mjs";
+import type { Channel, ChannelSlug, Episode } from "../core/types.mjs";
 import { Failure, Success } from "../core/result.mjs";
 
 import { run as download, DownloaderError } from "../downloader/index.mjs";
@@ -41,7 +41,7 @@ afterEach(() => {
 afterAll(() => {});
 
 const TEST_CHANNEL: Channel = {
-  channelId: "test" as ChannelID,
+  slug: "test" as ChannelSlug,
   name: "test channel",
   crawlURL: "https://channel.test/feed",
   mediaURL: "https://channle.test/media",

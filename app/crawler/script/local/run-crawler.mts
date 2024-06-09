@@ -6,7 +6,7 @@ import { ulid } from "ulid";
 
 import type { Result } from "../../core/result.mjs";
 import { Failure, Success } from "../../core/result.mjs";
-import type { Channel, ChannelID } from "../../core/types.mjs";
+import type { Channel, ChannelSlug } from "../../core/types.mjs";
 import type { CrawlerInput } from "../../crawler/index.mjs";
 import { getLogger } from "../../core/logger.mjs";
 import { run as crawl } from "../../crawler/index.mjs";
@@ -74,7 +74,7 @@ const findOrCreateByCrawlURL = async (
     }
   }
   const channel: Channel = {
-    channelId: ulid() as ChannelID,
+    slug: ulid() as ChannelSlug,
     crawlURL: crawlURL,
     mediaURL: crawlURL, // TODO:
     name: crawlURL, // TODO

@@ -42,16 +42,16 @@ app.post(
   ),
   async (c) => {
     const { name, crawl_url: crawlURL } = c.req.valid("form");
-    const channelId = ulid(); // TODO: Crete Channel function
+    const slug = ulid(); // TODO: Crete Channel function
     const ch = await db.channel.create({
-      data: { name, crawlURL, channelId, channelStatusId: 0 },
+      data: { name, crawlURL, slug, channelStatusId: 0 },
     });
     return c.html(<ChannelBar channel={ch} />);
   },
 );
-app.get("/channel/:channelId", async (c) => {
+app.get("/channel/:slug", async (c) => {
   const ch = await db.channel.findFirst({
-    where: { channelId: c.req.param("channelId") },
+    where: { slug: c.req.param("slug") },
     include: { status: true },
   });
   if (ch === null) {

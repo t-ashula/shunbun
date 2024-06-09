@@ -54,8 +54,8 @@ const staticRecording = async (
   const { episode, storeConfig } = input;
   const mediaDir = path.join(
     storeConfig.baseDir,
-    episode.channelId,
-    episode.episodeId,
+    episode.channelSlug,
+    episode.slug,
     MEDIA_DIR,
   );
 
@@ -69,7 +69,7 @@ const staticRecording = async (
         } else {
           const files = loading.value;
           const storedEpisode: StoredEpisode = {
-            episodeId: episode.episodeId,
+            episodeSlug: episode.slug,
             stored: files.map((f) => ({
               storageType: "local", // TODO: いる？
               storedAt: new Date(), // TODO: use file ctime
@@ -117,7 +117,7 @@ const staticRecording = async (
     await fs.writeFile(mediaFilePath, Buffer.from(buffer));
 
     const storedEpisode: StoredEpisode = {
-      episodeId: episode.episodeId,
+      episodeSlug: episode.slug,
       stored: [
         {
           storageType: "local", // TODO: いる？

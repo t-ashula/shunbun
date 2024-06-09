@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 
 import type { Result } from "../../core/result.mjs";
 import { Failure, Success } from "../../core/result.mjs";
-import type { Channel, ChannelID } from "../../core/types.mjs";
+import type { Channel, ChannelSlug } from "../../core/types.mjs";
 import { isChannel } from "../../core/types.mjs";
 import { getLogger } from "../../core/logger.mjs";
 import type {
@@ -18,7 +18,7 @@ import { LoaderError, SaverError } from "../index.mjs";
 import { listDirs } from "../../core/file.mjs";
 
 type ChannelLoadConfig = {
-  channelId?: ChannelID;
+  channelSlug?: ChannelSlug;
 };
 type ChannelSaveConfig = {
   update?: boolean; // TODO: move to SaveConfig.
@@ -35,10 +35,10 @@ const CHANNEL_FILE = "channel.json";
 const logger = getLogger();
 
 const channelFilePath = (
-  channelId: ChannelID,
+  channelSlug: ChannelSlug,
   config: ChannelLocalConfig,
 ): string => {
-  return path.join(config.baseDir, channelId, CHANNEL_FILE);
+  return path.join(config.baseDir, channelSlug, CHANNEL_FILE);
 };
 
 const saveChannel = async (
@@ -46,8 +46,8 @@ const saveChannel = async (
   config: ChannelSaveLocalConfig,
 ): Promise<SaverResult<ChannelSaveOutput>> => {
   try {
-    const { channelId } = channel;
-    const filePath = channelFilePath(channelId, config);
+    const { slug } = channel;
+    const filePath = channelFilePath(slug, config);
 
     if (!config.update) {
       try {
@@ -56,7 +56,7 @@ const saveChannel = async (
       } catch (err) {
         // nothing.
         // TODO: check file exists
-        logger.info(`save channel skipped. channelId=${channelId}`);
+        logger.info(`save channel skipped. slug=${slug}`);
       }
     }
     await fs.mkdir(path.dirname(filePath), { recursive: true });
@@ -87,10 +87,10 @@ const save = async (
 };
 
 const loadChannel = async (
-  channelId: ChannelID,
+  channelSlug: ChannelSlug,
   config: ChannelLoadLocalConfig,
 ): Promise<Result<LoaderOutput<Channel>, LoaderError>> => {
-  const filePath = channelFilePath(channelId, config);
+  const filePath = channelFilePath(channelSlug, config);
   try {
     const text = await fs.readFile(filePath, "utf-8");
     const data = JSON.parse(text);
@@ -100,9 +100,7 @@ const loadChannel = async (
     logger.warn(`unknown data found. path=${filePath}`);
     return new Success({ values: [] });
   } catch (err) {
-    logger.error(
-      `local load channel failed. channelId=${channelId} error=${err}`,
-    );
+    logger.error(`local load channel failed. slug=${channelSlug} error=${err}`);
     return new Failure(new LoaderError("load channel failed", { cause: err }));
   }
 };
@@ -128,8 +126,8 @@ const load = async (
 ): Promise<Result<LoaderOutput<Channel>, LoaderError>> => {
   const { config } = input;
   logger.debug(`load channel called. config=${JSON.stringify(config)}`);
-  if (config.channelId !== undefined) {
-    return loadChannel(config.channelId, config);
+  if (config.channelSlug !== undefined) {
+    return loadChannel(config.channelSlug, config);
   }
 
   const listing = await listChannelIds(config);
@@ -140,7 +138,7 @@ const load = async (
   }
   const ids = listing.value;
   const results = await Promise.all(
-    ids.map(async (id) => await loadChannel(id as ChannelID, config)),
+    ids.map(async (slug) => await loadChannel(slug as ChannelSlug, config)),
   );
   // TODO: Failure 握りつぶして良い？
   const values = results

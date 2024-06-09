@@ -12,7 +12,7 @@ import type {
   TranscriberAPIResponse,
   Transcript,
   EpisodeTranscript,
-  TranscriptID,
+  TranscriptSlug,
 } from "../core/types.mjs";
 import { isTranscriberAPIResponse } from "../core/types.mjs";
 import { listFiles } from "../core/file.mjs";
@@ -223,7 +223,7 @@ const run = async (
   const { storedEpisode, config } = input;
   const { stored } = storedEpisode;
 
-  const transcripts = [];
+  const transcripts: Transcript[] = [];
   for (const media of stored) {
     const filePath = media.storedKey; // TODO: check storeType
     const transcribing = await transcribeFile(filePath, config);
@@ -237,15 +237,14 @@ const run = async (
       transcripts.push(transcribing.value);
     }
   }
-  const output = {
-    episodeTranscript: {
-      transcriptId: ulid() as TranscriptID,
-      episodeId: storedEpisode.episodeId,
-      transcripts,
-      transcribedAt: new Date(),
-    },
+  const episodeTranscript: EpisodeTranscript = {
+    slug: ulid() as TranscriptSlug,
+    episodeSlug: storedEpisode.episodeSlug,
+    transcripts,
+    transcribedAt: new Date(),
   };
-  return new Success(output);
+
+  return new Success({ episodeTranscript });
 };
 
 export type { TranscriberInput, TranscriberOutput };

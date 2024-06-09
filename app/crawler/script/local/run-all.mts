@@ -34,11 +34,11 @@ const crawlToTranscript = async (
     config: { baseDir },
   });
 
-  const { channelId } = channel;
+  const { slug: channelSlug } = channel;
   // reload all episodes
   const allEpisodes = (
     await loadEpisodes({
-      config: { channelId, baseDir },
+      config: { channelSlug, baseDir },
     })
   ).unwrap().values;
 
@@ -48,21 +48,21 @@ const crawlToTranscript = async (
     const recordings = await Promise.all(
       episodes.map(async (episode) => {
         return {
-          episodeId: episode.episodeId,
+          episodeSlug: episode.slug,
           result: await record({ episode, storeConfig: { baseDir } }),
         };
       }),
     );
     const recordedEpisodes = recordings
-      .map(({ episodeId, result }) => {
+      .map(({ episodeSlug, result }) => {
         if (result.isFailure()) {
           logger.warn(
-            `recording failed. channelId=${channelId} episodeId=${episodeId}`,
+            `recording failed. channel=${channelSlug} episodeSlug=${episodeSlug}`,
           );
           return [];
         }
         logger.info(
-          `recording success. channelId=${channelId} episodeId=${episodeId}`,
+          `recording success. channel=${channelSlug} episodeSlug=${episodeSlug}`,
         );
         return result.value.storedEpisode;
       })
@@ -74,13 +74,13 @@ const crawlToTranscript = async (
       const checking = await loadTranscript({
         config: {
           baseDir,
-          channelId,
-          episodeId: recorded.episodeId,
+          channelSlug,
+          episodeSlug: recorded.episodeSlug,
         },
       });
       if (checking.isSuccess()) {
         logger.info(
-          `episode has transcript. channel=${channelId} episode=${recorded.episodeId}`,
+          `episode has transcript. channel=${channelSlug} episode=${recorded.episodeSlug}`,
         );
         continue;
       }
@@ -90,11 +90,11 @@ const crawlToTranscript = async (
       });
       if (transcribing.isFailure()) {
         logger.warn(
-          `transcribe failed. channel=${channelId} episode=${recorded.episodeId}`,
+          `transcribe failed. channel=${channelSlug} episode=${recorded.episodeSlug}`,
         );
       } else {
         logger.info(
-          `transcribe success. channel=${channelId} episode=${recorded.episodeId}`,
+          `transcribe success. channel=${channelSlug} episode=${recorded.episodeSlug}`,
         );
         const episodeTranscript = transcribing.value.episodeTranscript;
         episodeTranscripts.push(episodeTranscript);
@@ -134,7 +134,7 @@ const crawlToTranscript = async (
           crawlToTranscript(channel, baseDir);
         } catch (err) {
           logger.error(
-            `channel processing failed. channelId=${channel.channelId} error=${err}`,
+            `channel processing failed. channel=${channel.slug} error=${err}`,
           );
         }
       }),

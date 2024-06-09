@@ -2,10 +2,10 @@ import { expect, describe, it, assert, afterEach, vi } from "vitest";
 
 import { run, canHandle } from "./rss.mjs";
 import type { ExtractorInput } from "./index.mjs";
-import type { Channel, ChannelID } from "../../core/types.mjs";
+import type { Channel, ChannelSlug } from "../../core/types.mjs";
 
 const TEST_CHANNEL: Channel = {
-  channelId: "test" as ChannelID,
+  slug: "test" as ChannelSlug,
   name: "test channel",
   crawlURL: "https://channel.test/feed",
   mediaURL: "https://channle.test/media",
@@ -98,11 +98,11 @@ describe("run", () => {
     assert(result.isSuccess() === true); // FIXME: type
     expect(result.value.episodes).toStrictEqual([
       {
-        channelId: "test",
+        channelSlug: "test",
         description: "the last episode",
         duration: 1335,
         expectedContentType: "audio/mpeg",
-        episodeId: "01HX1MV3X47MVF06P32KS8HGJB",
+        slug: "01HX1MV3X47MVF06P32KS8HGJB",
         publishedAt: new Date("2023-12-29T12:39:28.000Z"),
         streamURL: "https://channel.test/ep2.mp3",
         streaming: "static",
@@ -110,11 +110,11 @@ describe("run", () => {
         title: "episode 2. last episode",
       },
       {
-        channelId: "test",
+        channelSlug: "test",
         description: "the first episode",
         duration: 2535,
         expectedContentType: "audio/mpeg",
-        episodeId: "01HX1MV3X4ECYE32AMFK1B3S4Z",
+        slug: "01HX1MV3X4ECYE32AMFK1B3S4Z",
         publishedAt: new Date("2023-12-22T12:39:28.000Z"),
         streamURL: "https://channel.test/ep1.mp3",
         streaming: "static",

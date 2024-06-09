@@ -1,12 +1,12 @@
 import { expect, describe, it, assert } from "vitest";
 
-import type { Channel, ChannelID } from "../../core/types.mjs";
+import type { Channel, ChannelSlug } from "../../core/types.mjs";
 import type { ExtractorInput } from "./index.mjs";
 
 import { ExtractorError, run } from "./index.mjs";
 
 const TEST_CHANNEL: Channel = {
-  channelId: "test" as ChannelID,
+  slug: "test" as ChannelSlug,
   name: "test channel",
   crawlURL: "https://channel.test/feed",
   mediaURL: "https://channle.test/media",
