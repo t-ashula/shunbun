@@ -105,7 +105,7 @@ const loadChannel = async (
   }
 };
 
-const listChannelIds = async (
+const listChannelSlugs = async (
   config: ChannelLocalConfig,
 ): Promise<Result<string[], LoaderError>> => {
   // TODO: use index file
@@ -130,7 +130,7 @@ const load = async (
     return loadChannel(config.channelSlug, config);
   }
 
-  const listing = await listChannelIds(config);
+  const listing = await listChannelSlugs(config);
   if (listing.isFailure()) {
     return new Failure(
       new LoaderError("list channel id failed", { cause: listing.error }),
