@@ -126,8 +126,11 @@ const crawlToTranscript = async (
   const baseDir = path.resolve(arg.dataDir);
   const allChannels = (await loadChannels({ config: { baseDir } })).unwrap()
     .values;
-  logger.debug(`load channels done. count=${allChannels.length}`);
-  for (const channels of eachSlice(allChannels, PARALLEL)) {
+  const livingChannels = allChannels.filter((ch) => ch.channelStatusId !== 2);
+  logger.debug(
+    `load channels done. count=${allChannels.length} living=${livingChannels.length}`,
+  );
+  for (const channels of eachSlice(livingChannels, PARALLEL)) {
     const results = await Promise.all(
       channels.map(async (channel) => {
         try {

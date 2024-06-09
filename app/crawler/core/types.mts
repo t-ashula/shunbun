@@ -2,12 +2,21 @@ type Brand<K, T> = K & { __brand: T };
 
 type StreamingType = "static" | "stream" | "live";
 
+const ChannelStatuses = {
+  Registered: 0,
+  Operating: 1,
+  Retired: 2,
+} as const;
+
+type ChannelStatusID = (typeof ChannelStatuses)[keyof typeof ChannelStatuses];
+
 type ChannelSlug = Brand<string, "ChannelSlug">;
 type Channel = {
   slug: ChannelSlug;
   name: string;
   crawlURL: string;
   mediaURL: string;
+  channelStatusId: ChannelStatusID;
 };
 
 const hasKeys = (obj: any, keys: string[]): boolean => {
@@ -99,7 +108,7 @@ const isTranscript = (obj: any): obj is Transcript => {
   return hasKeys(obj, ["text", "lang", "segments"]);
 };
 const isEpisodeTranscript = (obj: any): obj is EpisodeTranscript => {
-  return hasKeys(obj, ["episode", "transcripts"]);
+  return hasKeys(obj, ["episodeSlug", "transcripts"]);
 };
 
 export type {
