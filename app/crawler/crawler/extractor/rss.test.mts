@@ -9,6 +9,7 @@ const TEST_CHANNEL: Channel = {
   name: "test channel",
   crawlURL: "https://channel.test/feed",
   mediaURL: "https://channle.test/media",
+  channelStatusId: 1,
 };
 // TODO: use fixture file
 const TEST_RSS = `<?xml version="1.0" encoding="UTF-8"?>

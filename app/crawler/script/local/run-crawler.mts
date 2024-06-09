@@ -78,6 +78,7 @@ const findOrCreateByCrawlURL = async (
     crawlURL: crawlURL,
     mediaURL: crawlURL, // TODO:
     name: crawlURL, // TODO
+    channelStatusId: 1,
   };
 
   const saving = await saveChannels({

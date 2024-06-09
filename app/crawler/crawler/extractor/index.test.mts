@@ -10,6 +10,7 @@ const TEST_CHANNEL: Channel = {
   name: "test channel",
   crawlURL: "https://channel.test/feed",
   mediaURL: "https://channle.test/media",
+  channelStatusId: 1,
 };
 
 describe("run", () => {
