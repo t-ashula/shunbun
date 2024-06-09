@@ -26,7 +26,9 @@
     "format": "prettier -c --no-config --no-editorconfig './**/*.{ts,mts}'",
     "lint": "eslint --max-warnings=0 --report-unused-disable-directives './**/*.{ts,mts}'",
     "fix": "npm run format -- -w && npm run lint -- --fix",
+    "prisma-sql-gen": "prisma migrate dev --create-only --preview-feature",
     "prisma-sql-fix": "find ./prisma/migrations/ -iname \"*.sql\" -exec sed -i -e 's/ DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;/;/g' {} \\;",
+    "prisma-sql-apply": "prisma migrate dev --preview-feature",
     "dev": "tsx watch web/server.ts"
   },
   "dependencies": {
