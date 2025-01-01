@@ -50,8 +50,9 @@ app.post(
   },
 );
 app.get("/channel/:slug", async (c) => {
+  const slug = c.req.param("slug");
   const ch = await db.channel.findFirst({
-    where: { slug: c.req.param("slug") },
+    where: { slug },
     include: { status: true },
   });
   if (ch === null) {
@@ -59,4 +60,17 @@ app.get("/channel/:slug", async (c) => {
   }
   return c.render(<ChannelCard channel={ch} />);
 });
+
+app.get("/episode/:slug", async (c) => {
+  const slug = c.req.param("slug");
+  const ep = await db.episode.findFirst({
+    where: { slug },
+    include: { channel: true },
+  });
+  if (ep === null) {
+    return c.html(<h1>404</h1>, 404);
+  }
+  return c.render(<Episode episode={ep} />);
+});
+
 export default app;

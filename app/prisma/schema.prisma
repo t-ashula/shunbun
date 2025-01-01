@@ -26,6 +26,7 @@ model Channel {
   channelStatusId Int           @map("channel_status_id")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
+  Episode         Episode[]
 
   @@map("channels")
 }
@@ -37,4 +38,19 @@ model ChannelStatus {
   Channel     Channel[]
 
   @@map("channel_statuses")
+}
+
+model Episode {
+  id BigInt @id @default(autoincrement())
+
+  slug  String @unique @map("slug") @db.VarChar(26)
+  title String @default("") @db.VarChar(500)
+
+  channel   Channel @relation(fields: [channelId], references: [id])
+  channelId BigInt
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("episodes")
 }
